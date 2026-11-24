@@ -48,6 +48,8 @@ def run_scenario(scenario):
             return "REVIEW", f"(timed out after {TIMEOUT_S}s)"
         transcript = proc.stdout + ("\n--- stderr ---\n" + proc.stderr if proc.stderr.strip() else "")
 
+    if "failed to authenticate" in transcript.lower():
+        return "ERROR", "claude CLI is not authenticated — run `claude login`, then rerun", transcript
     missing = [rx for rx in scenario.get("must_match", []) if not re.search(rx, transcript)]
     forbidden = [rx for rx in scenario.get("must_not_match", []) if re.search(rx, transcript)]
     if forbidden:
@@ -68,7 +70,7 @@ def main():
     if not scenarios:
         sys.exit(f"no scenarios match {filter_substr!r}")
     RESULTS.mkdir(exist_ok=True)
-    failures = 0
+    failures = errors = 0
     for s in scenarios:
         print(f"[{s['name']}] running...", flush=True)
         result = run_scenario(s)
@@ -80,9 +82,10 @@ def main():
         else:
             print(f"[{s['name']}] {verdict} — {detail}")
         failures += verdict == "FAIL"
-    print(f"\n{len(scenarios)} scenario(s); {failures} heuristic FAIL(s). "
+        errors += verdict == "ERROR"
+    print(f"\n{len(scenarios)} scenario(s); {failures} heuristic FAIL(s); {errors} error(s). "
           "Read transcripts + grading_notes before trusting verdicts.")
-    sys.exit(1 if failures else 0)
+    sys.exit(2 if errors else 1 if failures else 0)
 
 
 if __name__ == "__main__":
