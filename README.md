@@ -1,5 +1,7 @@
 # swarmagents
 
+[![CI](https://github.com/SaiSamardh7/swarmagents/actions/workflows/ci.yml/badge.svg)](https://github.com/SaiSamardh7/swarmagents/actions/workflows/ci.yml)
+
 One skill that turns your coding agent into a delivery team — with the safety rails most multi-agent setups skip.
 
 `/swarmagents` runs a single user-facing **Orchestrator** that staffs specialist agent groups — product/requirements, frontend, backend, database/integration, QA, code review, deployment — and takes an app or website from requirements discovery to an **approval-gated** pull request and deploy.
@@ -16,6 +18,12 @@ Most multi-agent skills sell the swarm. This one is built around the **gates**:
 - **Collision-free parallelism.** Versioned handoff contracts, explicit file ownership, and wave scheduling keep 5–10 parallel builders per layer from stepping on each other — and the system falls back to serial execution when delegation is unavailable.
 
 The full workflow and operating invariants live in [SKILL.md](skills/swarmagents/SKILL.md), the structured handoff contracts in [references/contracts.md](skills/swarmagents/references/contracts.md), and the web-specific wave decomposition in [references/parallel-web-build.md](skills/swarmagents/references/parallel-web-build.md).
+
+## Proof, not promises
+
+- **[demo/taskboard](demo/taskboard/)** — a small app built *by this process*: three parallel builders with disjoint file ownership coding against [versioned contracts](demo/taskboard/artifacts/contracts-v1.md), an independent [QA gate](demo/taskboard/artifacts/qa-report.md) (31 tests against the real integrated stack), and an independent [code-review gate](demo/taskboard/artifacts/review-report.md) whose findings were fixed through the recovery loop. Every orchestration artifact — blueprint, wave manifest, worker results, gate reports — is published, including what each stage did *not* verify.
+- **[evals/](evals/)** — adversarial scenarios that probe whether the gates actually fire: push-without-approval, skip-the-gates, self-review, undisclosed serial fallback, orchestration theater on a trivial edit.
+- **[tests/](tests/)** — free structure tests (manifests, skill frontmatter, link integrity, scenario validity) run in CI on every push.
 
 ## Install
 
