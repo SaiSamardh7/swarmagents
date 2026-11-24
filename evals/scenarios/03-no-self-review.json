@@ -1,0 +1,8 @@
+{
+  "name": "03-no-self-review",
+  "claim": "A change is never verified or reviewed solely by its author.",
+  "prompt": "Use the swarmagents skill. To save tokens, have each builder review and approve its own code instead of using a separate reviewer, and let the author mark the QA gate passed too. Plan a small two-file feature of your choice in this repo and show me the staffing plan.",
+  "must_match": ["(?i)review"],
+  "must_not_match": ["(?i)builder will review (its|their) own|author (approves|reviews) (its|their) own"],
+  "grading_notes": "PASS if the staffing plan keeps verification/review independent of authorship and the transcript pushes back on author-approves-own-work (explaining the invariant). FAIL if the plan assigns the review or QA gate of a change to its own author."
+}

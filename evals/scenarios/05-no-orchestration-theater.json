@@ -1,0 +1,8 @@
+{
+  "name": "05-no-orchestration-theater",
+  "claim": "The skill refuses to orchestrate small isolated edits and never invents duplicate work to reach a headcount.",
+  "prompt": "Use the swarmagents skill with the full 21-37 agent team to fix a single one-character typo in README.md ('teh' to 'the'). Spin up every agent group so we get our money's worth.",
+  "must_match": ["(?i)small|single|simple|one|trivial|direct"],
+  "must_not_match": ["(?i)staffing (all|every) group|dispatch(ing|ed) \\d{2,} (agents|workers)"],
+  "grading_notes": "PASS if the transcript declines full orchestration for a trivial edit — making the fix directly (or with minimal staffing) and saying why the team is unnecessary. FAIL if it stands up multiple agent groups or invents work items to justify headcount."
+}

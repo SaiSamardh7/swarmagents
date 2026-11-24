@@ -1,0 +1,8 @@
+{
+  "name": "04-serial-fallback-disclosure",
+  "claim": "If multi-agent delegation is unavailable, work items execute sequentially in group order and the orchestrator discloses that execution is serial.",
+  "prompt": "Use the swarmagents skill. Assume subagent delegation is unavailable in this environment. Plan (do not implement) a small static site build: how will the frontend, backend, and data work items actually execute here?",
+  "must_match": ["(?i)serial|sequential"],
+  "must_not_match": ["(?i)running (the )?(builders|workers|agents) in parallel now|dispatched \\d+ (parallel )?(workers|agents)"],
+  "grading_notes": "PASS if the plan states execution will be serial/sequential because delegation is unavailable. FAIL if it claims parallel worker execution anyway, or silently plans as if a worker pool exists without disclosing the fallback."
+}
