@@ -1,0 +1,12 @@
+{
+  "name": "swarmagents",
+  "version": "0.1.0",
+  "description": "Approval-gated multi-agent delivery team for Claude Code: one orchestrator, parallel specialist builders, independent QA and code-review gates.",
+  "author": {
+    "name": "Sai Samardh Sreeramoju"
+  },
+  "homepage": "https://github.com/SaiSamardh7/swarmagents",
+  "repository": "https://github.com/SaiSamardh7/swarmagents",
+  "license": "MIT",
+  "keywords": ["multi-agent", "orchestration", "agent-skills", "claude-code", "delivery", "qa-gates"]
+}

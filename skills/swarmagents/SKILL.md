@@ -28,7 +28,7 @@ The end-to-end flow is:
 
 That is a scalable team of roughly 21–37 agents at full strength. Treat the counts as planned capacity, not a quota: the system scales workers up or down with task size, and activates only as many instances as the work graph and runtime can use safely. A small change may need one builder per group; do not invent duplicate work to reach a headcount. If multi-agent delegation is unavailable, execute work items sequentially in group order and disclose that execution is serial.
 
-When building on the Swarm repo: it supplies the basic `Agent`, tool-calling, handoff, and context-variable mechanisms. The scheduler, worker pools, file isolation, artifact tracking, and quality gates described here are this skill's additions and must be implemented or enforced by the orchestrator.
+This skill is framework-free: the scheduler, worker pools, file isolation, artifact tracking, and quality gates described here must be implemented or enforced by the orchestrator at runtime.
 
 ## Operating Invariants
 

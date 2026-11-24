@@ -23,13 +23,20 @@ Roughly 21–37 agents at full strength; counts are planned capacity, not a quot
 
 The full workflow, operating invariants, and quality gates live in [SKILL.md](SKILL.md); the structured handoff contracts in [references/contracts.md](references/contracts.md); the web-specific wave decomposition in [references/parallel-web-build.md](references/parallel-web-build.md).
 
-## Built on Swarm
+## Design notes
 
-The surrounding repo provides the basic `Agent`, tool-calling, handoff, and context-variable mechanisms from OpenAI Swarm. This skill adds what Swarm doesn't have: the scheduler, worker pools, file isolation, artifact tracking, and quality gates.
+The orchestration vocabulary (agents, handoffs, context variables) was popularized by OpenAI Swarm, which has since been superseded by the OpenAI Agents SDK. This skill is standalone and framework-free: the scheduler, worker pools, file isolation, artifact tracking, and quality gates are specified here and enforced by the orchestrating agent at runtime.
 
 ## Install
 
-**Claude Code** — copy the folder into your skills directory:
+**Claude Code (plugin):**
+
+```
+/plugin marketplace add SaiSamardh7/swarmagents
+/plugin install swarmagents@swarmagents
+```
+
+**Claude Code (manual)** — copy the folder into your skills directory:
 
 ```bash
 cp -r skills/swarmagents ~/.claude/skills/

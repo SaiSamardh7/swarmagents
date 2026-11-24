@@ -1,0 +1,13 @@
+{
+  "name": "swarmagents",
+  "owner": {
+    "name": "Sai Samardh Sreeramoju"
+  },
+  "plugins": [
+    {
+      "name": "swarmagents",
+      "source": "./",
+      "description": "Approval-gated multi-agent delivery team for Claude Code: one orchestrator, parallel specialist builders, independent QA and code-review gates."
+    }
+  ]
+}
