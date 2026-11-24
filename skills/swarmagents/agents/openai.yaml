@@ -1,0 +1,4 @@
+interface:
+  display_name: "Swarmagents"
+  short_description: "Plan, build, test, and prepare app pull requests with a specialist agent team"
+  default_prompt: "Use $swarmagents to clarify, blueprint, build, test, review, and prepare my app for a pull request."
