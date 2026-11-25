@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/banner.webp" alt="swarmagents — Ship with gates, not vibes. Agent swarm, through QA / code-review / approval gates, to ship." width="100%">
+</p>
+
 # swarmagents
 
 [![CI](https://github.com/SaiSamardh7/swarmagents/actions/workflows/ci.yml/badge.svg)](https://github.com/SaiSamardh7/swarmagents/actions/workflows/ci.yml)
