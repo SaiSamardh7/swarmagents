@@ -68,7 +68,7 @@ Most multi-agent skills sell the swarm. This one is built around the gates:
 - **No self-review.** A change is never verified solely by its author; the QA and review gates must both pass before delivery.
 - **No silent mutations.** Workers may prepare a branch, PR text, or deploy plan, but only your explicit approval of the *named action* lets it execute.
 - **Managerial recovery, not retry spam.** Failures trigger an evidence-collecting recovery loop with root-cause classification; the same root cause surviving two repair cycles halts dispatch and forces a changed plan.
-- **Collision-free parallelism.** Versioned contracts, explicit file ownership, and wave scheduling keep 5–10 builders per layer from stepping on each other — with a disclosed serial fallback when delegation is unavailable.
+- **Collision-free parallelism.** Versioned contracts, explicit file ownership, and wave scheduling keep up to 20 builders per layer from stepping on each other — with a disclosed serial fallback when delegation is unavailable.
 
 # Examples
 
@@ -84,18 +84,20 @@ Full operating instructions live in [SKILL.md](skills/swarmagents/SKILL.md); thi
 
 ## The team
 
-| Agent group | Count | Responsibility |
+| Agent group | Typical (mid-size app) | Responsibility |
 |---|---:|---|
-| Orchestrator | 1 | Plans work, assigns tasks, manages dependencies, speaks to the user |
+| Orchestrator | 1 (fixed) | Plans work, assigns tasks, manages dependencies, speaks to the user |
 | Product/Requirements | 2–3 | Requirements, UX flow, acceptance criteria |
-| Frontend Builders | 5–10 | Pages, components, styling, forms, state, accessibility |
-| Backend Builders | 5–10 | APIs, business logic, auth, jobs, observability |
-| Database/Integration | 5–10 | Schema, migrations, data access, external APIs, webhooks |
-| Tester/QA | 1 coordinator | Creates and runs unit, API, integration, and E2E tests |
-| Code Reviewer | 1 | Reviews correctness, security, architecture, and quality |
-| Deployment | 1 | Builds, deploys, monitors, and rolls back (behind the approval gate) |
+| Frontend Builders | 5–10 (max 20) | Pages, components, styling, forms, state, accessibility |
+| Backend Builders | 5–10 (max 20) | APIs, business logic, auth, jobs, observability |
+| Database/Integration | 5–10 (max 20) | Schema, migrations, data access, external APIs, webhooks |
+| Tester/QA | 1 coordinator + up to 2 helpers (max 3) | Creates and runs unit, API, integration, and E2E tests |
+| Code Reviewer | 1 lead + up to 2 helpers (max 3) | Reviews correctness, security, architecture, and quality |
+| Deployment | 1 (fixed) | Builds, deploys, monitors, and rolls back (behind the approval gate) |
 
-Counts are planned capacity, not a quota: the orchestrator staffs the smallest useful pool for the work graph and never invents work to reach a headcount.
+**Sizing is orchestrator-chosen.** The typical values describe a mid-size app, not a quota: the orchestrator derives each non-fixed count from the work graph — one worker per independent, non-overlapping write scope — bounded by runtime capacity and a hard cap of 20 active workers per builder group (larger graphs run in successive waves). It staffs the smallest useful pool and never invents work to reach a headcount. QA and review may grow to three instances each, but every gate keeps one owner — the coordinator or lead — who reconciles helper findings and issues the gate's single verdict.
+
+**Per-role models.** On the skill's first run in a project, the orchestrator asks one batched question: which model each role should run on, offering the platform's actually-available models by tier with a recommended mapping (strongest for the orchestrator and review lead, balanced tiers for builders — pickable per group). Choices persist in `.swarmagents.yml` at the repo root and are reused on every later run; a new project is asked afresh.
 
 ## The pipeline
 
