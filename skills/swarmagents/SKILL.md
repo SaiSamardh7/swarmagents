@@ -15,18 +15,20 @@ The end-to-end flow is:
 
 ## Team Model
 
-| Agent group | Count | Responsibility |
+| Agent group | Typical (mid-size app) | Responsibility |
 |---|---:|---|
-| Orchestrator | 1 | Plans work, assigns tasks, manages dependencies, speaks to the user |
+| Orchestrator | 1 (fixed) | Plans work, assigns tasks, manages dependencies, speaks to the user |
 | Product/Requirements | 2–3 | Requirements, UX flow, acceptance criteria |
 | Frontend Builders | 5–10 | Pages, components, styling, forms, state, accessibility |
 | Backend Builders | 5–10 | APIs, business logic, auth, jobs, observability |
 | Database/Integration | 5–10 | Schema, migrations, data access, external APIs, webhooks |
-| Tester/QA | 1 coordinator | Creates and runs unit, API, integration, and E2E tests |
-| Code Reviewer | 1 | Reviews correctness, security, architecture, and quality |
-| Deployment | 1 | Builds, deploys, monitors, and rolls back (behind the approval gate) |
+| Tester/QA | 1 coordinator (fixed) | Creates and runs unit, API, integration, and E2E tests |
+| Code Reviewer | 1 (fixed) | Reviews correctness, security, architecture, and quality |
+| Deployment | 1 (fixed) | Builds, deploys, monitors, and rolls back (behind the approval gate) |
 
-That is a scalable team of roughly 21–37 agents at full strength. Treat the counts as planned capacity, not a quota: the system scales workers up or down with task size, and activates only as many instances as the work graph and runtime can use safely. A small change may need one builder per group; do not invent duplicate work to reach a headcount. If multi-agent delegation is unavailable, execute work items sequentially in group order and disclose that execution is serial.
+**Sizing rule — the Orchestrator chooses every non-fixed count.** The table's numbers are typical values for a mid-size app, guidance rather than limits. For each builder group, derive the count from the work graph: one worker per independent, non-overlapping write scope, bounded only by the runtime's available worker slots. A large build may exceed the typical range; a small change may need one builder per group, or none. Do not invent duplicate work to reach a headcount.
+
+The fixed roles stay at one instance each regardless of scale — they exist to keep a single source of truth per gate (one scheduler, one test verdict, one review verdict, one deploy owner). The Tester/QA coordinator and Code Reviewer may enlist builders for test or fix implementation, but each gate has exactly one owner. If multi-agent delegation is unavailable, execute work items sequentially in group order and disclose that execution is serial.
 
 This skill is framework-free: the scheduler, worker pools, file isolation, artifact tracking, and quality gates described here must be implemented or enforced by the orchestrator at runtime.
 
@@ -37,8 +39,7 @@ This skill is framework-free: the scheduler, worker pools, file isolation, artif
 - Ask at most three concise, decision-relevant questions in one batch. The orchestrator derives, deduplicates, and prioritizes them.
 - Do not ask the user to choose implementation details that can be safely inferred. Record reasonable assumptions in the blueprint.
 - Do not begin implementation while a missing product decision would materially change architecture, data handling, or acceptance criteria.
-- Do not run the maximum worker count by default. Scale from the number of independent, non-overlapping tasks.
-- Run independent ready tasks concurrently. The active worker count is the smallest of: the number of ready tasks, the group's capacity, and the runtime's available worker slots.
+- Scale from the number of independent, non-overlapping tasks, never from ambition. Run independent ready tasks concurrently: the active worker count is the smaller of the number of ready tasks and the runtime's available worker slots.
 - When more tasks are ready than the runtime can execute simultaneously, preserve the full plan and execute it in parallel waves rather than discarding tasks or oversubscribing the runtime.
 - Each builder owns isolated files or a separate worktree. Concurrent workers must not edit overlapping files; otherwise assign explicit file ownership and serialize conflicts.
 - Workers return artifacts, tests, and blockers through the structured contracts in `references/contracts.md` — not just text, and with artifact paths instead of large pasted payloads.
@@ -83,7 +84,7 @@ The Orchestrator owns the scheduler and remains active while workers run:
 
 1. Build a wave manifest containing only dependency-ready work items, drawn from any group whose dependencies are met — frontend, backend, and data tasks run in parallel when independent.
 2. Confirm that write scopes do not overlap and that every shared interface has a versioned contract.
-3. Start as many worker instances concurrently as runtime capacity permits, up to each group's limit.
+3. Start as many worker instances concurrently as runtime capacity permits.
 4. Continue useful orchestrator work while agents run: monitor status, answer contract questions, prepare later waves, and report meaningful progress.
 5. Collect every result at a wave barrier. Do not integrate a partial interface while sibling tasks are still targeting an older contract.
 6. Validate interface compatibility, integrate the wave, run focused checks, and update the work graph.

@@ -20,7 +20,7 @@ Store these decisions in the blueprint or referenced artifacts. Assign each cont
 
 ## Decompose by Independent Deliverable
 
-For a sufficiently rich page, choose 5-10 independent builder assignments from these boundaries, routed to the matching agent group (Frontend, Backend, Database/Integration, Tester/QA):
+For a sufficiently rich page, choose as many independent builder assignments as the page genuinely separates into (typically 5-10), routed to the matching agent group (Frontend, Backend, Database/Integration, Tester/QA):
 
 1. **Application shell** — routing, navigation, global layout, providers.
 2. **Design system** — tokens and reusable primitives, without owning feature sections.
