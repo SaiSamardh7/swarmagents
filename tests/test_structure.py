@@ -52,6 +52,12 @@ class TestReadmeLinks(unittest.TestCase):
         if demo.exists():
             self.check_relative_links(demo)
 
+    def test_example_readmes(self):
+        readmes = sorted((ROOT / "examples").glob("*/README.md"))
+        self.assertGreaterEqual(len(readmes), 3)
+        for md in readmes:
+            self.check_relative_links(md)
+
 
 class TestEvalScenarios(unittest.TestCase):
     def test_scenarios_well_formed(self):
