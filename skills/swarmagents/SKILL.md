@@ -22,13 +22,13 @@ The end-to-end flow is:
 | Frontend Builders | 5–10 (max 20) | Pages, components, styling, forms, state, accessibility |
 | Backend Builders | 5–10 (max 20) | APIs, business logic, auth, jobs, observability |
 | Database/Integration | 5–10 (max 20) | Schema, migrations, data access, external APIs, webhooks |
-| Tester/QA | 1 coordinator (fixed) | Creates and runs unit, API, integration, and E2E tests |
-| Code Reviewer | 1 (fixed) | Reviews correctness, security, architecture, and quality |
+| Tester/QA | 1 coordinator + up to 2 helpers (max 3) | Creates and runs unit, API, integration, and E2E tests |
+| Code Reviewer | 1 lead + up to 2 helpers (max 3) | Reviews correctness, security, architecture, and quality |
 | Deployment | 1 (fixed) | Builds, deploys, monitors, and rolls back (behind the approval gate) |
 
 **Sizing rule — the Orchestrator chooses every non-fixed count.** The table's typical values describe a mid-size app. For each builder group, derive the count from the work graph: one worker per independent, non-overlapping write scope, bounded by the runtime's available worker slots and a hard cap of 20 active workers per builder group. A large build may exceed the typical range up to that cap; work beyond 20 independent tasks in one group runs in successive waves. A small change may need one builder per group, or none. Do not invent duplicate work to reach a headcount.
 
-The fixed roles stay at one instance each regardless of scale — they exist to keep a single source of truth per gate (one scheduler, one test verdict, one review verdict, one deploy owner). The Tester/QA coordinator and Code Reviewer may enlist builders for test or fix implementation, but each gate has exactly one owner. If multi-agent delegation is unavailable, execute work items sequentially in group order and disclose that execution is serial.
+The Orchestrator and Deployment roles stay at one instance each regardless of scale. The Tester/QA and Code Reviewer gates may grow to three instances when the workload warrants it (parallel test-writing, a large diff split across reviewers), but each gate keeps exactly one owner — the coordinator or lead — who reconciles helper findings and issues the gate's single pass/fail verdict. Helpers report to the owner, never to the Orchestrator directly, and never issue verdicts. This preserves one source of truth per gate: one scheduler, one test verdict, one review verdict, one deploy owner. If multi-agent delegation is unavailable, execute work items sequentially in group order and disclose that execution is serial.
 
 This skill is framework-free: the scheduler, worker pools, file isolation, artifact tracking, and quality gates described here must be implemented or enforced by the orchestrator at runtime.
 

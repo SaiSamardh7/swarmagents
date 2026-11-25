@@ -15,11 +15,11 @@ Use it for substantial app and website work that benefits from parallel builders
 | Frontend Builders | 5–10 (max 20) | Pages, components, styling, forms, state, accessibility |
 | Backend Builders | 5–10 (max 20) | APIs, business logic, auth, jobs, observability |
 | Database/Integration | 5–10 (max 20) | Schema, migrations, data access, external APIs, webhooks |
-| Tester/QA | 1 coordinator (fixed) | Creates and runs unit, API, integration, and E2E tests |
-| Code Reviewer | 1 (fixed) | Reviews correctness, security, architecture, and quality |
+| Tester/QA | 1 coordinator + up to 2 helpers (max 3) | Creates and runs unit, API, integration, and E2E tests |
+| Code Reviewer | 1 lead + up to 2 helpers (max 3) | Reviews correctness, security, architecture, and quality |
 | Deployment | 1 (fixed) | Builds, deploys, monitors, and rolls back |
 
-The Orchestrator chooses every non-fixed count from the work graph — one worker per independent, non-overlapping write scope, bounded by runtime capacity and a hard cap of 20 active workers per builder group (larger graphs run in waves). The typical values describe a mid-size app; the fixed roles stay singular to keep one source of truth per gate. Falls back to serial execution when delegation is unavailable.
+The Orchestrator chooses every non-fixed count from the work graph — one worker per independent, non-overlapping write scope, bounded by runtime capacity and a hard cap of 20 active workers per builder group (larger graphs run in waves). The typical values describe a mid-size app. QA and review may grow to three instances, but each gate keeps one owner who issues its single verdict — one source of truth per gate. Falls back to serial execution when delegation is unavailable.
 
 The full workflow, operating invariants, and quality gates live in [SKILL.md](SKILL.md); the structured handoff contracts in [references/contracts.md](references/contracts.md); the web-specific wave decomposition in [references/parallel-web-build.md](references/parallel-web-build.md).
 
