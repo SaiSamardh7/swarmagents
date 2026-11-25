@@ -12,14 +12,14 @@ Use it for substantial app and website work that benefits from parallel builders
 |---|---:|---|
 | Orchestrator | 1 (fixed) | Plans work, assigns tasks, manages dependencies, speaks to the user |
 | Product/Requirements | 2–3 | Requirements, UX flow, acceptance criteria |
-| Frontend Builders | 5–10 | Pages, components, styling, forms, state, accessibility |
-| Backend Builders | 5–10 | APIs, business logic, auth, jobs, observability |
-| Database/Integration | 5–10 | Schema, migrations, data access, external APIs, webhooks |
+| Frontend Builders | 5–10 (max 20) | Pages, components, styling, forms, state, accessibility |
+| Backend Builders | 5–10 (max 20) | APIs, business logic, auth, jobs, observability |
+| Database/Integration | 5–10 (max 20) | Schema, migrations, data access, external APIs, webhooks |
 | Tester/QA | 1 coordinator (fixed) | Creates and runs unit, API, integration, and E2E tests |
 | Code Reviewer | 1 (fixed) | Reviews correctness, security, architecture, and quality |
 | Deployment | 1 (fixed) | Builds, deploys, monitors, and rolls back |
 
-The Orchestrator chooses every non-fixed count from the work graph — one worker per independent, non-overlapping write scope, bounded only by runtime capacity. The typical values describe a mid-size app, not a limit; the fixed roles stay singular to keep one source of truth per gate. Falls back to serial execution when delegation is unavailable.
+The Orchestrator chooses every non-fixed count from the work graph — one worker per independent, non-overlapping write scope, bounded by runtime capacity and a hard cap of 20 active workers per builder group (larger graphs run in waves). The typical values describe a mid-size app; the fixed roles stay singular to keep one source of truth per gate. Falls back to serial execution when delegation is unavailable.
 
 The full workflow, operating invariants, and quality gates live in [SKILL.md](SKILL.md); the structured handoff contracts in [references/contracts.md](references/contracts.md); the web-specific wave decomposition in [references/parallel-web-build.md](references/parallel-web-build.md).
 

@@ -19,14 +19,14 @@ The end-to-end flow is:
 |---|---:|---|
 | Orchestrator | 1 (fixed) | Plans work, assigns tasks, manages dependencies, speaks to the user |
 | Product/Requirements | 2–3 | Requirements, UX flow, acceptance criteria |
-| Frontend Builders | 5–10 | Pages, components, styling, forms, state, accessibility |
-| Backend Builders | 5–10 | APIs, business logic, auth, jobs, observability |
-| Database/Integration | 5–10 | Schema, migrations, data access, external APIs, webhooks |
+| Frontend Builders | 5–10 (max 20) | Pages, components, styling, forms, state, accessibility |
+| Backend Builders | 5–10 (max 20) | APIs, business logic, auth, jobs, observability |
+| Database/Integration | 5–10 (max 20) | Schema, migrations, data access, external APIs, webhooks |
 | Tester/QA | 1 coordinator (fixed) | Creates and runs unit, API, integration, and E2E tests |
 | Code Reviewer | 1 (fixed) | Reviews correctness, security, architecture, and quality |
 | Deployment | 1 (fixed) | Builds, deploys, monitors, and rolls back (behind the approval gate) |
 
-**Sizing rule — the Orchestrator chooses every non-fixed count.** The table's numbers are typical values for a mid-size app, guidance rather than limits. For each builder group, derive the count from the work graph: one worker per independent, non-overlapping write scope, bounded only by the runtime's available worker slots. A large build may exceed the typical range; a small change may need one builder per group, or none. Do not invent duplicate work to reach a headcount.
+**Sizing rule — the Orchestrator chooses every non-fixed count.** The table's typical values describe a mid-size app. For each builder group, derive the count from the work graph: one worker per independent, non-overlapping write scope, bounded by the runtime's available worker slots and a hard cap of 20 active workers per builder group. A large build may exceed the typical range up to that cap; work beyond 20 independent tasks in one group runs in successive waves. A small change may need one builder per group, or none. Do not invent duplicate work to reach a headcount.
 
 The fixed roles stay at one instance each regardless of scale — they exist to keep a single source of truth per gate (one scheduler, one test verdict, one review verdict, one deploy owner). The Tester/QA coordinator and Code Reviewer may enlist builders for test or fix implementation, but each gate has exactly one owner. If multi-agent delegation is unavailable, execute work items sequentially in group order and disclose that execution is serial.
 
