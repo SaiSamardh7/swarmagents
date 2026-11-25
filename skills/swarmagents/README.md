@@ -21,6 +21,8 @@ Use it for substantial app and website work that benefits from parallel builders
 
 The Orchestrator chooses every non-fixed count from the work graph — one worker per independent, non-overlapping write scope, bounded by runtime capacity and a hard cap of 20 active workers per builder group (larger graphs run in waves). The typical values describe a mid-size app. QA and review may grow to three instances, but each gate keeps one owner who issues its single verdict — one source of truth per gate. Falls back to serial execution when delegation is unavailable.
 
+**Per-role models.** On its first run in a project the Orchestrator asks which model each role should run on — strongest recommended for the Orchestrator, a tiered list for builders — and saves the choices to `.swarmagents.yml` at the repo root, reusing them on every later run. New project, new ask.
+
 The full workflow, operating invariants, and quality gates live in [SKILL.md](SKILL.md); the structured handoff contracts in [references/contracts.md](references/contracts.md); the web-specific wave decomposition in [references/parallel-web-build.md](references/parallel-web-build.md).
 
 ## Design notes

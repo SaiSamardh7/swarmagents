@@ -32,6 +32,36 @@ The Orchestrator and Deployment roles stay at one instance each regardless of sc
 
 This skill is framework-free: the scheduler, worker pools, file isolation, artifact tracking, and quality gates described here must be implemented or enforced by the orchestrator at runtime.
 
+## Model Selection (first run in a project)
+
+Before the first orchestration in a project, check the repository root for `.swarmagents.yml`. If it exists, use the model assignments it records and do not re-ask. If it does not exist — a new project, or the skill's first use — ask the user one batched question: which model should each role run on. Offer the models actually available on the user's platform (inspect the runtime; do not offer models the platform cannot run), grouped by tier, and lead with a recommended mapping they can accept as-is:
+
+| Role | Recommended tier | Why |
+|---|---|---|
+| Orchestrator | The strongest model available | Owns planning, scheduling, recovery diagnosis, and every gate — errors here multiply across all workers |
+| Code Review lead | Strongest, or one tier below | Last quality gate before delivery |
+| Product/Requirements | Balanced mid-tier | Structured analysis, not deep reasoning chains |
+| Frontend / Backend / Database builders | Balanced mid-tier | Bounded, well-specified tasks; a list to choose from — the user may pick different models per group |
+| QA coordinator and helpers | Balanced mid-tier; helpers may drop a tier | Test derivation needs care; execution is mechanical |
+| Review helpers | One tier below the lead | Pre-screen findings the lead reconciles |
+| Deployment | Balanced mid-tier | Procedural; the approval gate is the safety mechanism, not the model |
+
+Present it as one question with the recommendation first ("accept recommended, or customize per role"), not as eight separate questions. Record the user's choices in `.swarmagents.yml` at the repository root:
+
+```yaml
+models:
+  orchestrator: string      # model id as the platform names it
+  product_requirements: string
+  frontend: string
+  backend: string
+  database_integration: string
+  tester_qa: string
+  code_reviewer: string
+  deployment: string
+```
+
+Reuse the file on every later run in that project; re-ask only if the user requests a change or a recorded model is no longer available (then re-ask for the affected roles only). If the runtime cannot set a model per worker, say so, run everything on the session's model, and still record the file so the preference applies when the runtime can honor it.
+
 ## Operating Invariants
 
 - The Orchestrator is the only role that speaks to the user and the only role that assigns work. Workers report to it; a worker may not assign work to another worker, change another worker's ownership, or silently revise a shared contract.
@@ -51,7 +81,7 @@ This skill is framework-free: the scheduler, worker pools, file isolation, artif
 
 ### 1. Intake and Reconnaissance
 
-Read the user's task and inspect the repository, instructions, current state, stack, tests, and delivery setup. Summarize the product goal, known constraints, assumptions, and genuine unknowns.
+Read the user's task and inspect the repository, instructions, current state, stack, tests, and delivery setup. Summarize the product goal, known constraints, assumptions, and genuine unknowns. If `.swarmagents.yml` is missing, include the Model Selection question in this phase's question batch.
 
 Do not modify product code during this phase unless the user explicitly asked for an immediate small change and orchestration is unnecessary.
 
