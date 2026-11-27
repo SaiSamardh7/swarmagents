@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/banner.svg" alt="swarmagents — Ship with gates, not vibes. Agent swarm, through QA / code-review / approval gates, to ship." width="100%">
+  <img src="assets/banner.webp" alt="swarmagents — Ship with gates, not vibes. Agent swarm, through QA / code-review / approval gates, to ship." width="100%">
 </p>
 
 # swarmagents
