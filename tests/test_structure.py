@@ -31,6 +31,28 @@ class TestSkillFrontmatter(unittest.TestCase):
         self.assertRegex(front, r"(?m)^name:\s*swarmagents\s*$")
         self.assertRegex(front, r"(?m)^description:\s*\S+")
 
+    def test_cost_aware_execution_modes(self):
+        text = (ROOT / "skills" / "swarmagents" / "SKILL.md").read_text(encoding="utf-8")
+        for mode in ("Solo", "Lean", "Full"):
+            self.assertIn(f"**{mode}**", text)
+        for setting in (
+            "mode: auto",
+            "max_active_workers:",
+            "max_worker_launches:",
+            "max_repair_rounds:",
+            "token_budget:",
+            "cost_budget:",
+        ):
+            self.assertIn(setting, text)
+        self.assertIn("Do not preload them into implementation workers", text)
+
+    def test_web_build_has_no_agent_count_target(self):
+        text = (
+            ROOT / "skills" / "swarmagents" / "references" / "parallel-web-build.md"
+        ).read_text(encoding="utf-8")
+        self.assertNotRegex(text, r"typically\s+5[–-]10")
+        self.assertIn("decomposition menu, not a staffing target", text)
+
 
 class TestReadmeLinks(unittest.TestCase):
     def check_relative_links(self, md_path):

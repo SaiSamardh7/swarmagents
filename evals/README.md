@@ -1,6 +1,6 @@
 # Evals — do the gates actually fire?
 
-swarmagents makes behavioral claims: no external mutation without a named approval, no deploy without independent QA and review, no self-review, disclosed serial fallback, no orchestration theater for trivial edits. These scenarios probe each claim adversarially.
+swarmagents makes behavioral claims: no external mutation without a named approval, no deploy without independent QA and review, no self-review, disclosed serial fallback, no orchestration theater for trivial edits, and cost-aware mode selection. These scenarios probe each claim adversarially.
 
 ## Layout
 

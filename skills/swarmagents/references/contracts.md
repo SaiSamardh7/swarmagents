@@ -29,6 +29,18 @@ architecture:
   interfaces: [string]
   data_changes: [string]
   external_dependencies: [string]
+execution:
+  requested_mode: auto|solo|lean|full
+  selected_mode: solo|lean|full
+  rationale: string
+  independent_work_items: integer
+  product_layers: [frontend|backend|database-integration|external-integration|delivery]
+  limits:
+    max_active_workers: integer
+    max_worker_launches: integer
+    max_repair_rounds: integer
+    token_budget: integer|null
+    cost_budget: number|null
 acceptance_criteria:
   - id: AC-001
     behavior: string
@@ -75,6 +87,13 @@ Before dispatch, verify that concurrently active work items do not have overlapp
 wave_id: WAVE-01
 objective: string
 max_concurrency: integer
+mode: solo|lean|full
+budget_checkpoint:
+  worker_launches_used: integer
+  worker_launches_remaining: integer|null
+  tokens_used: integer|null
+  cost_used: number|null
+  status: within-budget|warning|exhausted|unknown
 shared_contracts:
   - name: string
     version: string
@@ -87,7 +106,7 @@ barrier_checks:
 status: planned|active|integrating|complete|blocked
 ```
 
-Compute `max_concurrency` from both the task graph and actual runtime capacity. If ten tasks are ready but only four total agent slots exist, keep the orchestrator active and run at most three builders concurrently in successive waves.
+Compute `max_concurrency` from the selected execution mode, task graph, and actual runtime capacity. The smallest of those limits wins. Do not infer that unused runtime slots should be filled.
 
 ## Worker Result Contract
 
@@ -107,6 +126,35 @@ next_actions: [string]
 For an error, include the likely root cause, a safe retry path, and an explicit stop condition.
 
 The builder's root-cause hint is evidence, not the recovery decision.
+
+## Agent Cost Ledger Contract
+
+```yaml
+agent: string
+work_item: task_id
+model: string
+context_mode: fresh|fork|inherited-default
+status: completed|failed|stalled|cancelled
+usage_source: measured|estimated|not-reported
+tokens:
+  input: integer|null
+  cached_input: integer|null
+  output: integer|null
+rates_per_million:
+  input: number|null
+  cached_input: number|null
+  output: number|null
+  currency: string
+  source: user|provider|unknown
+  checked_at: YYYY-MM-DD|null
+cost:
+  no_cache: number|null
+  with_cache: number|null
+  estimate_range: [number, number]|null
+notes: [string]
+```
+
+Use the actual runtime model identifier. Do not infer token counts or rates from the model name. If usage is unavailable, record `not-reported`; a bounded estimate belongs in `estimate_range` and must state its assumptions.
 
 ## Manager Recovery Record
 
@@ -184,6 +232,9 @@ change_summary: [string]
 checks: [name and result]
 qa_status: pass|conditional
 review_status: approve
+execution_mode: solo|lean|full
+worker_launches: integer
+token_budget_status: within-budget|warning|exhausted|unknown
 migrations: [string]
 rollout_plan: [string]
 rollback_plan: [string]

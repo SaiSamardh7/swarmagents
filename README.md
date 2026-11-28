@@ -61,6 +61,8 @@ swarmagents focuses on making agent **teamwork** governable: parallel where it's
 
 A single user-facing **Orchestrator** plans the work graph, dispatches bounded tasks to specialist groups in parallel waves, integrates at wave barriers, and owns recovery when something fails — workers build and report; they don't steer.
 
+Before dispatch, it selects a cost-aware execution mode from evidence in the work graph: **Solo** for one coherent deliverable, **Lean** for two to four independent work items, and **Full** for genuinely multi-layer or high-risk builds. Small isolated edits skip orchestration entirely.
+
 ## Why swarmagents
 
 Most multi-agent skills sell the swarm. This one is built around the gates:
@@ -84,20 +86,20 @@ Full operating instructions live in [SKILL.md](skills/swarmagents/SKILL.md); thi
 
 ## The team
 
-| Agent group | Typical (mid-size app) | Responsibility |
+| Agent group | Allowed range | Responsibility |
 |---|---:|---|
 | Orchestrator | 1 (fixed) | Plans work, assigns tasks, manages dependencies, speaks to the user |
-| Product/Requirements | 2–3 | Requirements, UX flow, acceptance criteria |
-| Frontend Builders | 5–10 (max 20) | Pages, components, styling, forms, state, accessibility |
-| Backend Builders | 5–10 (max 20) | APIs, business logic, auth, jobs, observability |
-| Database/Integration | 5–10 (max 20) | Schema, migrations, data access, external APIs, webhooks |
-| Tester/QA | 1 coordinator + up to 2 helpers (max 3) | Creates and runs unit, API, integration, and E2E tests |
-| Code Reviewer | 1 lead + up to 2 helpers (max 3) | Reviews correctness, security, architecture, and quality |
-| Deployment | 1 (fixed) | Builds, deploys, monitors, and rolls back (behind the approval gate) |
+| Product/Requirements | 0–3 | Requirements, UX flow, acceptance criteria when independent analysis is useful |
+| Frontend Builders | 0–20 | Pages, components, styling, forms, state, accessibility |
+| Backend Builders | 0–20 | APIs, business logic, auth, jobs, observability |
+| Database/Integration | 0–20 | Schema, migrations, data access, external APIs, webhooks |
+| Tester/QA | 0–3 | Creates and runs unit, API, integration, and E2E tests |
+| Code Reviewer | 0–3 | Reviews correctness, security, architecture, and quality |
+| Deployment | 0–1 | Builds, deploys, monitors, and rolls back when specialist work is warranted |
 
-**Sizing is orchestrator-chosen.** The typical values describe a mid-size app, not a quota: the orchestrator derives each non-fixed count from the work graph — one worker per independent, non-overlapping write scope — bounded by runtime capacity and a hard cap of 20 active workers per builder group (larger graphs run in successive waves). It staffs the smallest useful pool and never invents work to reach a headcount. QA and review may grow to three instances each, but every gate keeps one owner — the coordinator or lead — who reconciles helper findings and issues the gate's single verdict.
+**Sizing is mode- and evidence-driven.** Solo uses one builder and one independent verifier. Lean uses one to three builders with separate QA and review owners. Full derives its staffing from independently testable, non-overlapping deliverables, bounded by runtime capacity and a hard cap of 20 active workers per builder group. QA and review may grow to three instances each in Full mode, but every gate keeps one owner.
 
-**Per-role models.** On the skill's first run in a project, the orchestrator asks one batched question: which model each role should run on, offering the platform's actually-available models by tier with a recommended mapping (strongest for the orchestrator and review lead, balanced tiers for builders — pickable per group). Choices persist in `.swarmagents.yml` at the repo root and are reused on every later run; a new project is asked afresh.
+**Per-role models and cost reporting.** On the skill's first run in a project, the orchestrator asks one batched question: which model each role should run on, offering the platform's actually-available models by tier with a recommended mapping (strongest for the orchestrator and review lead, balanced tiers for builders — pickable per group). Choices persist in `.swarmagents.yml` at the repo root and are reused on every later run. Workers default to fresh contexts with compact task packets instead of inheriting the orchestrator's full history. The final report uses a standard per-agent table for actual model, rates, input/output tokens, no-cache estimate, and cached estimate, with measured and inferred values labeled separately.
 
 ## The pipeline
 
@@ -106,14 +108,16 @@ Full operating instructions live in [SKILL.md](skills/swarmagents/SKILL.md); thi
 1. **Intake & reconnaissance** — inspect the repo before asking questions the code can answer.
 2. **Requirements** — at most three batched, decision-relevant questions; inferable details become recorded assumptions.
 3. **Blueprint** — testable scope and acceptance criteria, surfaced before implementation.
-4. **Work graph & staffing** — contract-bound items with dependencies, ownership, and verification commands.
+4. **Mode, work graph & staffing** — select Solo, Lean, or Full; then create contract-bound items with dependencies, ownership, budgets, and verification commands.
 5. **Parallel waves** — dependency-ready items run concurrently; results collect at a wave barrier before integration.
 6. **Recovery loop** — on any failure: stop propagation, collect evidence, diagnose, bound the blast radius, change the plan, re-dispatch.
 7. **Gates & delivery** — QA, then review, then the approval question; then (and only then) the named mutation, monitored, with a rollback plan.
 
 ## Contracts
 
-Eight structured documents carry every handoff ([references/contracts.md](skills/swarmagents/references/contracts.md)): Blueprint, Work Item, Parallel Wave Manifest, Worker Result, Manager Recovery Record, Verification Report, Review Report, and Delivery Approval Package. Web builds additionally follow the wave decomposition in [references/parallel-web-build.md](skills/swarmagents/references/parallel-web-build.md).
+Nine structured documents carry every handoff ([references/contracts.md](skills/swarmagents/references/contracts.md)): Blueprint, Work Item, Parallel Wave Manifest, Worker Result, Agent Cost Ledger, Manager Recovery Record, Verification Report, Review Report, and Delivery Approval Package. Model selection, fresh-versus-fork routing, and the final cost table follow [references/model-routing-and-cost.md](skills/swarmagents/references/model-routing-and-cost.md). Web builds additionally follow the wave decomposition in [references/parallel-web-build.md](skills/swarmagents/references/parallel-web-build.md).
+
+The dated [competitive comparison](docs/competitive-comparison-2026-11-27.md) explains how swarmagents differs from gstack, Oh My Claude Code, Superpowers, Ruflo, and AWS CLI Agent Orchestrator, including which tool is stronger for each use case.
 
 ## Gates
 

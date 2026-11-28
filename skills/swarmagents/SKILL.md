@@ -7,28 +7,42 @@ description: Coordinate substantial app and website work with one orchestrator a
 
 Act as the sole user-facing orchestrator for a specialist team of worker agents. Clarify the product before implementation, convert the agreed intent into a blueprint and dependency-aware work graph, delegate bounded tasks to the right agent group, integrate and validate the result, and prepare delivery. Keep all external mutations within the user's authorization.
 
-Read [references/contracts.md](references/contracts.md) before producing a blueprint, dispatching implementation work, or preparing a pull request. For webpage or site implementation, also read [references/parallel-web-build.md](references/parallel-web-build.md) before staffing builders.
+Read [references/contracts.md](references/contracts.md) before producing a blueprint, dispatching implementation work, or preparing a pull request. Read [references/model-routing-and-cost.md](references/model-routing-and-cost.md) before selecting worker models, choosing fresh agents versus inherited forks, or reporting cost. For webpage or site implementation, also read [references/parallel-web-build.md](references/parallel-web-build.md) before staffing builders.
 
 The end-to-end flow is:
 
 `Requirements → Plan → Build Frontend/Backend/Data in parallel → Integrate → Test → Review → Deploy → Verify`
 
-## Team Model
+## Execution Mode and Team Model
 
-| Agent group | Typical (mid-size app) | Responsibility |
+Choose the execution mode before launching any worker. An explicit user choice or recorded project setting wins. Otherwise choose `auto`, record the selected mode and evidence in the Blueprint, and use the smallest mode that can preserve the required ownership and verification boundaries.
+
+| Mode | Default staffing | Use when | Default limits |
+|---|---|---|---|
+| **Solo** | Orchestrator, 1 builder, 1 independent verifier | One coherent, independently testable deliverable in one product layer; no material migration, auth, external integration, or irreversible decision | 1 active builder; 2 planned worker launches; 1 repair round |
+| **Lean** | Orchestrator, 1–3 builders, 1 QA owner, 1 review owner | Two to four independent work items, usually across one or two layers, with bounded integration | 3 active builders; 5 planned worker launches; 1 repair round |
+| **Full** | Orchestrator plus the specialist groups required by the work graph | Five or more independent work items, several product layers, or risk that warrants dedicated requirements, integration, QA, review, or deployment specialists | Runtime capacity and work graph; 2 repair rounds |
+
+In Solo mode, the same independent verifier may issue two separate artifacts: the Verification Report and Review Report. That keeps both verdicts independent of the author while avoiding a second context for a small change. Lean and Full modes use separate QA and review owners. Product/Requirements and Deployment are conditional roles in every mode: launch them only when their work is substantive. The Orchestrator may prepare a routine delivery package directly; the external-action approval gate never changes.
+
+Before using Solo, confirm that one builder can own the implementation without a broad, ambiguous write scope. Before using Lean, confirm that its builder tasks have genuinely independent deliverables. Select Full when splitting the work creates useful parallelism or independent specialist judgment, not merely because the request sounds ambitious. A one-character edit or similarly trivial change does not justify even Solo mode; handle it directly without orchestration.
+
+Do not silently exceed a mode's worker-launch or repair-round limits. First reduce or merge tasks, reuse an existing worker where safe, and prefer deterministic commands over another agent. If completion genuinely requires a higher mode or a user-supplied token/cost ceiling would be exceeded, present the evidence and the revised mode or budget before new dispatches.
+
+| Agent group | Allowed range | Responsibility |
 |---|---:|---|
 | Orchestrator | 1 (fixed) | Plans work, assigns tasks, manages dependencies, speaks to the user |
-| Product/Requirements | 2–3 | Requirements, UX flow, acceptance criteria |
-| Frontend Builders | 5–10 (max 20) | Pages, components, styling, forms, state, accessibility |
-| Backend Builders | 5–10 (max 20) | APIs, business logic, auth, jobs, observability |
-| Database/Integration | 5–10 (max 20) | Schema, migrations, data access, external APIs, webhooks |
-| Tester/QA | 1 coordinator + up to 2 helpers (max 3) | Creates and runs unit, API, integration, and E2E tests |
-| Code Reviewer | 1 lead + up to 2 helpers (max 3) | Reviews correctness, security, architecture, and quality |
-| Deployment | 1 (fixed) | Builds, deploys, monitors, and rolls back (behind the approval gate) |
+| Product/Requirements | 0–3 | Requirements, UX flow, acceptance criteria when the Orchestrator cannot resolve them cheaply |
+| Frontend Builders | 0–20 | Pages, components, styling, forms, state, accessibility |
+| Backend Builders | 0–20 | APIs, business logic, auth, jobs, observability |
+| Database/Integration | 0–20 | Schema, migrations, data access, external APIs, webhooks |
+| Tester/QA | 0–3 | Creates and runs unit, API, integration, and E2E tests; Solo uses the independent verifier |
+| Code Reviewer | 0–3 | Reviews correctness, security, architecture, and quality; Solo uses the independent verifier |
+| Deployment | 0–1 | Builds, deploys, monitors, and rolls back when delivery work warrants a specialist |
 
-**Sizing rule — the Orchestrator chooses every non-fixed count.** The table's typical values describe a mid-size app. For each builder group, derive the count from the work graph: one worker per independent, non-overlapping write scope, bounded by the runtime's available worker slots and a hard cap of 20 active workers per builder group. A large build may exceed the typical range up to that cap; work beyond 20 independent tasks in one group runs in successive waves. A small change may need one builder per group, or none. Do not invent duplicate work to reach a headcount.
+**Sizing rule — the Orchestrator chooses every non-fixed count.** For each builder group, derive the count from the work graph: one worker per independently testable, non-overlapping deliverable, bounded by the selected mode, runtime capacity, and a hard cap of 20 active workers per builder group in Full mode. Work beyond the active limit runs in successive waves. Do not split setup, design tokens, documentation, accessibility, or tests into separate workers unless each produces a meaningful deliverable that can be accepted or rejected independently.
 
-The Orchestrator and Deployment roles stay at one instance each regardless of scale. The Tester/QA and Code Reviewer gates may grow to three instances when the workload warrants it (parallel test-writing, a large diff split across reviewers), but each gate keeps exactly one owner — the coordinator or lead — who reconciles helper findings and issues the gate's single pass/fail verdict. Helpers report to the owner, never to the Orchestrator directly, and never issue verdicts. This preserves one source of truth per gate: one scheduler, one test verdict, one review verdict, one deploy owner. If multi-agent delegation is unavailable, execute work items sequentially in group order and disclose that execution is serial.
+The Orchestrator stays at one instance. QA and review may grow to three instances in Full mode when the workload warrants it, but each gate keeps exactly one owner who reconciles helper findings and issues the gate's single verdict. Helpers report to the owner, never to the Orchestrator directly, and never issue verdicts. If multi-agent delegation is unavailable, execute valid work items sequentially within the selected mode and disclose that execution is serial.
 
 This skill is framework-free: the scheduler, worker pools, file isolation, artifact tracking, and quality gates described here must be implemented or enforced by the orchestrator at runtime.
 
@@ -38,8 +52,8 @@ Before the first orchestration in a project, check the repository root for `.swa
 
 | Role | Recommended tier | Why |
 |---|---|---|
-| Orchestrator | The strongest model available | Owns planning, scheduling, recovery diagnosis, and every gate — errors here multiply across all workers |
-| Code Review lead | Strongest, or one tier below | Last quality gate before delivery |
+| Orchestrator | Balanced mid-tier for Solo/Lean; strongest for Full or escalation | Routine scheduling does not always need the highest-cost model; architecture and recovery may |
+| Code Review lead | Match model strength to diff risk; strongest for broad or subtle changes | Last quality gate before delivery |
 | Product/Requirements | Balanced mid-tier | Structured analysis, not deep reasoning chains |
 | Frontend / Backend / Database builders | Balanced mid-tier | Bounded, well-specified tasks; a list to choose from — the user may pick different models per group |
 | QA coordinator and helpers | Balanced mid-tier; helpers may drop a tier | Test derivation needs care; execution is mechanical |
@@ -58,9 +72,35 @@ models:
   tester_qa: string
   code_reviewer: string
   deployment: string
+execution:
+  mode: auto  # auto|solo|lean|full
+  prefer_fresh_workers: true
+  allow_inherited_forks: false
+  max_active_workers: auto  # mode default unless the user sets a lower cap
+  max_worker_launches: auto # mode default unless the user sets a lower cap
+  max_repair_rounds: auto   # solo/lean: 1; full: 2
+cost_reporting:
+  enabled: true
+  currency: USD
+  token_budget: null
+  cost_budget: null
+  warn_at_percent: 80
+  rates: {}  # keyed by actual runtime model id; never guess missing rates
 ```
 
-Reuse the file on every later run in that project; re-ask only if the user requests a change or a recorded model is no longer available (then re-ask for the affected roles only). If the runtime cannot set a model per worker, say so, run everything on the session's model, and still record the file so the preference applies when the runtime can honor it.
+Reuse the file on every later run in that project; apply documented defaults for newly introduced optional keys instead of re-asking. Re-ask only if the user requests a change or a recorded model is no longer available (then re-ask for the affected roles only). If the runtime cannot set a model per worker, say so, run everything on the session's model, and still record the file so the preference applies when the runtime can honor it.
+
+### Context routing and cost
+
+Default to **fresh workers** on their assigned model with a compact written task packet containing the blueprint excerpt, work item, owned files, contract versions, acceptance criteria, reference artifact paths, and verification command. Do not copy the whole parent conversation into every worker.
+
+The full swarm skill and its references belong in the Orchestrator's context. Do not preload them into implementation workers. A worker receives the task packet, the project instructions it actually needs, and referenced files it can read. Return artifact paths and concise findings instead of pasting source files, plans, diffs, or long command output back into the Orchestrator's conversation.
+
+Use an inherited-context fork only when the task depends on context that cannot be made available through a task packet or accessible artifact, such as an attachment the fresh worker cannot inspect. Before forking, record the reason and the expected context/cost tradeoff. If an explicit worker model requires a fresh spawn in the current runtime, the model-routing rule wins: create the task packet and spawn fresh.
+
+When `cost_reporting.enabled` is true, maintain one Agent Cost Ledger record per worker and present the table from `references/model-routing-and-cost.md` at completion. Report measured values when the runtime exposes them. Clearly label estimates, unknown usage, cached-token assumptions, and stalled agents; never invent rates or precision.
+
+When the runtime exposes token or cost counters, check the configured budget before each new wave and repair dispatch. At the warning threshold, stop optional agents, merge remaining compatible work, and use deterministic checks where possible. A budget is not permission to skip required evidence: if the remaining gate cannot be completed within the ceiling, report the exact gap and request a revised budget or scope.
 
 ## Operating Invariants
 
@@ -70,12 +110,14 @@ Reuse the file on every later run in that project; re-ask only if the user reque
 - Do not ask the user to choose implementation details that can be safely inferred. Record reasonable assumptions in the blueprint.
 - Do not begin implementation while a missing product decision would materially change architecture, data handling, or acceptance criteria.
 - Scale from the number of independent, non-overlapping tasks, never from ambition. Run independent ready tasks concurrently: the active worker count is the smaller of the number of ready tasks and the runtime's available worker slots.
+- Apply the selected execution mode's active-worker, total-launch, and repair-round limits before runtime capacity. Record every exception and never expand from Solo or Lean to Full silently.
 - When more tasks are ready than the runtime can execute simultaneously, preserve the full plan and execute it in parallel waves rather than discarding tasks or oversubscribing the runtime.
 - Each builder owns isolated files or a separate worktree. Concurrent workers must not edit overlapping files; otherwise assign explicit file ownership and serialize conflicts.
 - Workers return artifacts, tests, and blockers through the structured contracts in `references/contracts.md` — not just text, and with artifact paths instead of large pasted payloads.
+- Every worker launch has a recorded context mode (`fresh`, `fork`, or `inherited-default`) and actual model identifier. Prefer fresh workers with compact task packets to avoid repeatedly billing large parent contexts.
 - Workers report results and evidence; they do not diagnose the overall workflow, rewrite the plan, or decide how a failed loop should recover. Those are Orchestrator responsibilities.
 - Deployment is blocked until the Tester/QA and Code Reviewer gates both approve.
-- Workers may prepare delivery artifacts but may not push, create a PR, merge, or deploy. A request to build does not authorize those external actions: the Orchestrator owns the user approval boundary, and the Deployment agent executes an external action only after the user approves that named action.
+- Workers may prepare delivery artifacts but may not push, create a PR, merge, or deploy. A request to build does not authorize those external actions: the Orchestrator owns the user approval boundary, and the authorized executor performs an external action only after the user approves that named action.
 
 ## Workflow
 
@@ -87,7 +129,7 @@ Do not modify product code during this phase unless the user explicitly asked fo
 
 ### 2. Requirements Conversation
 
-The Orchestrator, supported by the Product/Requirements agents, identifies the users, jobs, scope, priorities, journeys, accessibility needs, integrations, data, security, operational constraints, success measures, and acceptance criteria. Product/Requirements agents draft requirements, UX flows, and acceptance criteria as structured findings; they do not speak to the user. The Orchestrator reconciles their output and asks the user only the smallest question set needed to proceed. Continue the intake conversation until the core product intent is stable; do not barrage the user with implementation details.
+The Orchestrator identifies the users, jobs, scope, priorities, journeys, accessibility needs, integrations, data, security, operational constraints, success measures, and acceptance criteria. In Full mode, or when genuinely different product interpretations need independent analysis, Product/Requirements agents may draft structured findings. Do not launch them merely to restate a clear request. The Orchestrator reconciles any findings and asks the user only the smallest question set needed to proceed.
 
 ### 3. Blueprint
 
@@ -106,7 +148,7 @@ Turn the blueprint into work items with dependencies, ownership boundaries, acce
 
 For a webpage or site, establish shared contracts before parallel implementation: route and page map, design tokens, component boundaries, data types, API schemas, state ownership, and file ownership. Use the decomposition and example task map in `references/parallel-web-build.md`.
 
-Staff the smallest useful pool per group; if a layer cannot be safely divided into independent write scopes, use fewer agents there. If multiple approaches are genuinely valuable, use bounded prototypes and select one before full implementation.
+Staff within the selected mode. If a layer cannot be safely divided into independently testable write scopes, use one owner there. Count a proposed worker only when its deliverable can be accepted or rejected independently. If multiple approaches are genuinely valuable, use bounded prototypes only when their decision value justifies their extra contexts.
 
 ### 5. Parallel Wave Scheduling
 
@@ -114,7 +156,7 @@ The Orchestrator owns the scheduler and remains active while workers run:
 
 1. Build a wave manifest containing only dependency-ready work items, drawn from any group whose dependencies are met — frontend, backend, and data tasks run in parallel when independent.
 2. Confirm that write scopes do not overlap and that every shared interface has a versioned contract.
-3. Start as many worker instances concurrently as runtime capacity permits.
+3. Start no more worker instances than the selected mode, work graph, and runtime capacity all permit.
 4. Continue useful orchestrator work while agents run: monitor status, answer contract questions, prepare later waves, and report meaningful progress.
 5. Collect every result at a wave barrier. Do not integrate a partial interface while sibling tasks are still targeting an older contract.
 6. Validate interface compatibility, integrate the wave, run focused checks, and update the work graph.
@@ -139,13 +181,13 @@ The Orchestrator owns recovery whenever implementation, integration, verificatio
 5. **Modify the plan** — revise the blueprint, contract version, task boundary, dependency order, ownership, verification command, or implementation approach as needed.
 6. **Issue repair work** — create new bounded assignments with the evidence, changed plan, acceptance criteria, and stop condition. The Orchestrator chooses whether the original or another worker executes them.
 7. **Reintegrate and recheck** — run focused verification, then repeat independent review for the affected scope.
-8. **Break unproductive loops** — if the same root cause survives two repair cycles, stop dispatching repeats. The Orchestrator performs a fresh analysis and materially changes the plan before another attempt.
+8. **Break unproductive loops** — Solo and Lean stop repeat dispatch after one unsuccessful repair round; Full stops after two. The Orchestrator performs a fresh analysis and either changes the plan within the mode or presents evidence for a mode/budget change before another dispatch.
 
 Record each recovery using the Manager Recovery Record in `references/contracts.md`. Ask the user only when recovery requires a product decision, scope change, credentials, external dependency, or new authority. Otherwise the Orchestrator manages the correction autonomously.
 
 ### 8. Testing Gate (Tester/QA)
 
-The Tester/QA coordinator derives tests from the blueprint's acceptance criteria and verifies the integrated candidate: unit, API, integration, and E2E tests as the repository supports, plus lint/type checks, builds, and relevant security or migration validation. Focused tests run first, then the broader suite. The coordinator may enlist builders for test implementation, but verification of a change is never performed solely by its author.
+The QA owner derives tests from the blueprint's acceptance criteria and verifies the integrated candidate: unit, API, integration, and E2E tests as the repository supports, plus lint/type checks, builds, and relevant security or migration validation. Focused tests run first, then the broader suite. In Solo mode, the independent verifier owns this verdict; in Lean and Full, the Tester/QA coordinator owns it. The owner may enlist builders for test implementation, but verification of a change is never performed solely by its author.
 
 On any failure, invoke the Managerial Recovery Loop.
 
@@ -153,13 +195,13 @@ The testing gate passes only when required acceptance criteria and repository ch
 
 ### 9. Code Review Gate
 
-The Code Reviewer — never an author of the relevant change — examines the integrated diff and verification report for correctness, scope, security, privacy, accessibility, maintainability, performance, architecture, migrations, rollback risk, and test sufficiency.
+The review owner — never an author of the relevant change — examines the integrated diff and verification report for correctness, scope, security, privacy, accessibility, maintainability, performance, architecture, migrations, rollback risk, and test sufficiency. In Solo mode, the independent verifier issues this as a separate verdict after verification; in Lean and Full, a separate Code Reviewer owns it.
 
 The Orchestrator sends actionable findings through the Managerial Recovery Loop and issues the resulting fix tasks. The gate passes only when no unresolved critical or high-severity issue remains and the blueprint's acceptance criteria are satisfied.
 
 ### 10. Delivery, Approval Gate, and Deployment
 
-The Deployment agent prepares the delivery package, which the Orchestrator verifies: final status, diff summary, checks, branch name, target remote/base branch, PR title/body, migration notes, rollout plan, and rollback plan. The Orchestrator must ask the user for explicit approval immediately before any push, PR creation, or deploy.
+The Orchestrator prepares a routine delivery package directly. Launch a Deployment agent only when rollout, migration, monitoring, or rollback work is substantial enough to benefit from a specialist. The package includes final status, diff summary, checks, branch name, target remote/base branch, PR title/body, migration notes, rollout plan, and rollback plan. The Orchestrator must ask the user for explicit approval immediately before any push, PR creation, or deploy.
 
 Use a direct approval question that names the exact mutation, for example:
 
@@ -169,7 +211,7 @@ Treat silence, ambiguity, or approval of an earlier phase as no approval. Withou
 
 ### 11. Post-Deploy Verification
 
-After an approved deploy, the Deployment agent verifies the running system against the blueprint's success measures (health checks, smoke tests, key journeys) and reports the result. A failed verification triggers the rollback plan and the Managerial Recovery Loop.
+After an approved deploy, the Orchestrator or designated Deployment agent verifies the running system against the blueprint's success measures (health checks, smoke tests, key journeys) and reports the result. A failed verification triggers the rollback plan and the Managerial Recovery Loop.
 
 ## Progress and Completion
 
@@ -181,4 +223,5 @@ Completion requires:
 - Implementation integrated without unresolved ownership conflicts.
 - Testing and code-review gates passed or exceptions explicitly accepted.
 - Delivery package prepared.
+- Agent/model/token/cost table produced when cost reporting is enabled, with measured and estimated values distinguished.
 - Push/PR/deploy state reported truthfully: prepared, approved and executed, or withheld pending approval.

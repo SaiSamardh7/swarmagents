@@ -6,24 +6,34 @@ An agent skill that turns one AI coding agent into a full delivery team: a singl
 
 Use it for substantial app and website work that benefits from parallel builders — not for small isolated edits.
 
+The Orchestrator first chooses a cost-aware mode from the work graph:
+
+| Mode | Team | Best fit |
+|---|---|---|
+| Solo | 1 builder + 1 independent verifier | One coherent deliverable in one product layer |
+| Lean | 1–3 builders + QA owner + review owner | Two to four independent work items |
+| Full | Specialist groups sized from the graph | Multi-layer or high-risk builds with real parallelism |
+
+Solo's verifier issues separate verification and review verdicts, preserving independent judgment without paying for another context. Product/Requirements and Deployment are conditional roles in every mode.
+
 ## The team
 
-| Agent group | Typical (mid-size app) | Responsibility |
+| Agent group | Allowed range | Responsibility |
 |---|---:|---|
 | Orchestrator | 1 (fixed) | Plans work, assigns tasks, manages dependencies, speaks to the user |
-| Product/Requirements | 2–3 | Requirements, UX flow, acceptance criteria |
-| Frontend Builders | 5–10 (max 20) | Pages, components, styling, forms, state, accessibility |
-| Backend Builders | 5–10 (max 20) | APIs, business logic, auth, jobs, observability |
-| Database/Integration | 5–10 (max 20) | Schema, migrations, data access, external APIs, webhooks |
-| Tester/QA | 1 coordinator + up to 2 helpers (max 3) | Creates and runs unit, API, integration, and E2E tests |
-| Code Reviewer | 1 lead + up to 2 helpers (max 3) | Reviews correctness, security, architecture, and quality |
-| Deployment | 1 (fixed) | Builds, deploys, monitors, and rolls back |
+| Product/Requirements | 0–3 | Requirements, UX flow, acceptance criteria when independent analysis is useful |
+| Frontend Builders | 0–20 | Pages, components, styling, forms, state, accessibility |
+| Backend Builders | 0–20 | APIs, business logic, auth, jobs, observability |
+| Database/Integration | 0–20 | Schema, migrations, data access, external APIs, webhooks |
+| Tester/QA | 0–3 | Verification owner and optional helpers |
+| Code Reviewer | 0–3 | Review owner and optional helpers |
+| Deployment | 0–1 | Delivery specialist when rollout work warrants one |
 
-The Orchestrator chooses every non-fixed count from the work graph — one worker per independent, non-overlapping write scope, bounded by runtime capacity and a hard cap of 20 active workers per builder group (larger graphs run in waves). The typical values describe a mid-size app. QA and review may grow to three instances, but each gate keeps one owner who issues its single verdict — one source of truth per gate. Falls back to serial execution when delegation is unavailable.
+The Orchestrator chooses every non-fixed count from independently testable, non-overlapping deliverables, bounded first by the selected mode and then by runtime capacity. Full mode has a hard cap of 20 active workers per builder group; larger graphs run in waves. It never creates a worker for a task that cannot be independently accepted or rejected. Falls back to serial execution when delegation is unavailable.
 
-**Per-role models.** On its first run in a project the Orchestrator asks which model each role should run on — strongest recommended for the Orchestrator, a tiered list for builders — and saves the choices to `.swarmagents.yml` at the repo root, reusing them on every later run. New project, new ask.
+**Per-role models and cost reporting.** On its first run in a project the Orchestrator asks which model each role should run on — strongest recommended for the Orchestrator, a tiered list for builders — and saves the choices to `.swarmagents.yml` at the repo root. Workers default to fresh contexts with compact task packets instead of expensive full-history forks. The final report includes a per-agent model, token, rate, no-cache, and cached-cost table, clearly separating measured usage from estimates. New project, new ask.
 
-The full workflow, operating invariants, and quality gates live in [SKILL.md](SKILL.md); the structured handoff contracts in [references/contracts.md](references/contracts.md); the web-specific wave decomposition in [references/parallel-web-build.md](references/parallel-web-build.md).
+The full workflow, operating invariants, and quality gates live in [SKILL.md](SKILL.md); the structured handoff contracts in [references/contracts.md](references/contracts.md); the model-routing and cost table in [references/model-routing-and-cost.md](references/model-routing-and-cost.md); and the web-specific wave decomposition in [references/parallel-web-build.md](references/parallel-web-build.md).
 
 ## Design notes
 

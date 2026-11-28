@@ -18,9 +18,17 @@ Before builders edit code, the orchestrator records:
 
 Store these decisions in the blueprint or referenced artifacts. Assign each contract a version. A change to a shared contract invalidates dependent work until the orchestrator updates or reissues it.
 
+## Choose the Page Mode First
+
+- **Solo:** one builder owns the coherent page implementation. Use one independent verifier for both the Verification Report and the separate Review Report. Do not split layout, tokens, sections, responsiveness, or tests into workers just to create parallel work.
+- **Lean:** use one to three builders only when the page contains independently testable sections or a bounded frontend/backend boundary. Use separate QA and review owners.
+- **Full:** use four or more builders only for a substantial multi-page or multi-layer application whose work graph proves independent ownership boundaries. The general Full-mode cap still applies.
+
+A visually rich single page is not automatically a Full build. Count deliverables by independent acceptance and write ownership, not by the number of visible sections.
+
 ## Decompose by Independent Deliverable
 
-For a sufficiently rich page, choose as many independent builder assignments as the page genuinely separates into (typically 5-10), routed to the matching agent group (Frontend, Backend, Database/Integration, Tester/QA):
+For a Full-mode application, choose as many independent builder assignments as the work graph genuinely separates into. The following list is a decomposition menu, not a staffing target:
 
 1. **Application shell** — routing, navigation, global layout, providers.
 2. **Design system** — tokens and reusable primitives, without owning feature sections.
@@ -33,17 +41,17 @@ For a sufficiently rich page, choose as many independent builder assignments as 
 9. **Accessibility/responsiveness** — audit and bounded fixes after core structure exists.
 10. **Tests** — component, API, integration, or end-to-end coverage against agreed contracts.
 
-Items 1–5 belong to Frontend Builders, 6–7 to Backend Builders, 8 to Database/Integration, 9 to Frontend Builders, and 10 to the Tester/QA coordinator. Merge tiny tasks, omit irrelevant layers, and use fewer workers when boundaries would overlap.
+Items 1–5 belong to Frontend Builders, 6–7 to Backend Builders, 8 to Database/Integration, 9 to Frontend Builders, and 10 to the Tester/QA coordinator. Merge setup and cross-cutting concerns into the feature that needs them unless they produce independently reviewable artifacts. Omit irrelevant layers and use fewer workers when boundaries would overlap.
 
 ## Recommended Waves
 
 ### Wave 0: Contracts and Foundations
 
-Use a small group to establish route/layout structure, design tokens, API/data contracts, and test fixtures. Complete the barrier before feature builders depend on them.
+The Orchestrator records route/layout structure, design tokens, API/data contracts, and test fixtures. Dispatch a foundation worker only when this is a substantial independently testable deliverable. Complete the barrier before dependent builders start.
 
 ### Wave 1: Independent Features
 
-Launch the largest safe parallel group, typically 5-10 planned tasks across frontend sections, backend endpoints, and data integrations. Every worker receives:
+Launch no more than the selected mode permits across frontend sections, backend endpoints, and data integrations. Every worker receives:
 
 - One work item ID.
 - Exact write scope.
