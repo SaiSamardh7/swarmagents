@@ -1,0 +1,22 @@
+task: t1-landing-page
+arm: adaptive
+mode_decision:
+  selected_mode: solo
+  execution_style: inline
+  rationale: one coherent deliverable in one layer (single static page); no migration/auth/integration risk; inline build with one independent verifier is the smallest shape that forbids self-approval
+worker_launches: 1
+agents:
+  - agent: orchestrator (inline builder)
+    model: claude-fable-5 (session model)
+    context_mode: inherited-default
+    tokens: not-reported  # inline work is part of the session; not separately metered
+  - agent: VER-T1 independent verifier
+    model: claude-sonnet (runtime alias "sonnet")
+    context_mode: fresh
+    tokens_total: 60036   # measured, reported by runtime per-agent counter; input/output split not exposed
+verification: grade.py SCORE 11/11, exit 0
+gates:
+  qa: pass
+  review: approve (minor non-blocking accessibility/quality notes)
+defects_found_after_completion: 0
+recovery_rounds: 0

@@ -1,0 +1,22 @@
+task: t3-cross-layer
+arm: adaptive
+mode_decision:
+  selected_mode: solo
+  execution_style: fresh-worker
+  rationale: the three layers are serially dependent (storage -> core -> cli against one test spec), not independent write scopes; one builder owning all three files avoids interface-coordination cost; one independent verifier
+worker_launches: 2
+agents:
+  - agent: BLD-T3 builder (all three layers)
+    model: claude-sonnet
+    context_mode: fresh
+    tokens_total: 60652  # measured
+  - agent: VER-T3 independent verifier
+    model: claude-sonnet
+    context_mode: fresh
+    tokens_total: 59529  # measured
+verification: grade.py SCORE 2/2 (tests unmodified, 9 tests OK)
+gates:
+  qa: pass
+  review: approve (3 nits, no correctness defects)
+defects_found_after_completion: 0
+recovery_rounds: 0

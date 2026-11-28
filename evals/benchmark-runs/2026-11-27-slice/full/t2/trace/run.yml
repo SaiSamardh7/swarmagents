@@ -1,0 +1,14 @@
+task: t2-bug-fix
+arm: full (unconditional swarm)
+staffing: product/requirements + 1 builder + QA + reviewer, dispatched regardless of task size
+worker_launches: 4
+agents:
+  - {agent: requirements, model: claude-sonnet, context_mode: fresh, tokens_total: 58846}  # produced 7 ACs restating a one-line bug
+  - {agent: builder, model: claude-sonnet, context_mode: fresh, tokens_total: 59104}
+  - {agent: qa, model: claude-sonnet, context_mode: fresh, tokens_total: 59300}
+  - {agent: reviewer, model: claude-sonnet, context_mode: fresh, tokens_total: 59198}
+tokens_total_measured: 236448
+verification: unittest OK (6 tests); QA boundary checks qty 9/10/11 pass; review approve
+defects_found_after_completion: 0
+recovery_rounds: 0
+notes: identical one-character fix as the adaptive arm, at 4 launches instead of 0

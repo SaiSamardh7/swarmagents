@@ -1,0 +1,25 @@
+task: t1-landing-page
+arm: full (unconditional swarm)
+staffing: product/requirements + 3 parallel single-file builders (html/css/js) + QA + reviewer, plus 2 repair dispatches
+worker_launches: 8
+agents:
+  - {agent: requirements, model: claude-sonnet, context_mode: fresh, tokens_total: 60919}  # produced 42 acceptance criteria for a landing page
+  - {agent: builder-html, model: claude-sonnet, context_mode: fresh, tokens_total: 63333}
+  - {agent: builder-css, model: claude-sonnet, context_mode: fresh, tokens_total: 62882}
+  - {agent: builder-js, model: claude-sonnet, context_mode: fresh, tokens_total: 61530}   # brief said JS optional; swarm staffed it anyway
+  - {agent: repair-css REC-T1-01, model: claude-sonnet, context_mode: fresh, tokens_total: 60811}
+  - {agent: qa, model: claude-sonnet, context_mode: fresh, tokens_total: 59192}
+  - {agent: reviewer, model: claude-sonnet, context_mode: fresh, tokens_total: 63569}
+  - {agent: repair-css REC-T1-02, model: claude-sonnet, context_mode: fresh, tokens_total: 60487}
+tokens_total_measured: 492723
+recovery_rounds: 2
+recoveries:
+  - id: REC-T1-01
+    root_cause: interface-mismatch
+    evidence: HTML wrapped cards in div.grid; CSS applied grid layout to the sections directly, so the responsive 3-column layout never took effect; the structural grader could not see it
+  - id: REC-T1-02
+    root_cause: implementation-defect (cross-worker speculation)
+    evidence: review found dead CSS selectors styling HTML hooks that do not exist (.card a.button, aria-label recommended variant), redundant selector lists, FAQ padding misalignment at the breakpoint, unstyled .footer-links
+verification: grade.py SCORE 11/11 after repairs; QA pass incl. HTML/CSS cross-check; review findings repaired (reviewer not re-run after REC-T1-02; orchestrator verified the four fixes by grep)
+defects_found_after_completion: 0 (post-repair)
+notes: every defect in this run was a coordination artifact between single-file workers; the adaptive arm's inline build had none

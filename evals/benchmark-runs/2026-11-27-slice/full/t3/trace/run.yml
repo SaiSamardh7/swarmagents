@@ -1,0 +1,17 @@
+task: t3-cross-layer
+arm: full (unconditional swarm)
+staffing: product/requirements + 3 parallel single-file builders (storage/core/cli) + QA + reviewer
+worker_launches: 6
+agents:
+  - {agent: requirements, model: claude-sonnet, context_mode: fresh, tokens_total: 60692}
+  - {agent: builder-storage, model: claude-sonnet, context_mode: fresh, tokens_total: 60186}
+  - {agent: builder-core, model: claude-sonnet, context_mode: fresh, tokens_total: 60246}
+  - {agent: builder-cli, model: claude-sonnet, context_mode: fresh, tokens_total: 60279}
+  - {agent: qa, model: claude-sonnet, context_mode: fresh, tokens_total: 62031}
+  - {agent: reviewer, model: claude-sonnet, context_mode: fresh, tokens_total: 63939}
+tokens_total_measured: 367373
+verification: grade.py suite OK (9 tests) at the integration barrier; QA pass incl. CLI smoke tests; review approve
+defects_found_after_completion: 0
+review_findings: low-severity cross-layer duplication (archived default normalized in two layers - the coordination cost of splitting one feature across three single-file owners)
+recovery_rounds: 0
+notes: integration succeeded because the orchestrator supplied the interface contract in every packet; the reviewer still found duplicated normalization across layers

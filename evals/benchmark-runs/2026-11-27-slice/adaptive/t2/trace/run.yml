@@ -1,0 +1,14 @@
+task: t2-bug-fix
+arm: adaptive
+mode_decision:
+  selected_mode: direct
+  rationale: one-line threshold fix with an existing failing test as the spec; orchestration would be theater; repository checks are the verification
+worker_launches: 0
+agents:
+  - agent: orchestrator (direct)
+    model: claude-fable-5 (session model)
+    tokens: not-reported  # part of the session; the change was a one-character edit plus one test run
+verification: unittest discover -> OK (6 tests); grade.py confirms tests unmodified
+gates: direct mode; repository test suite is the check
+defects_found_after_completion: 0
+recovery_rounds: 0
