@@ -12,6 +12,9 @@ Use this reference when assigning models, choosing between fresh workers and inh
 6. Keep quality gates independent. A lower-cost review helper may gather findings, but the configured review lead owns the verdict.
 7. Do not preload the full swarm skill or its references into workers. The Orchestrator owns orchestration policy; workers receive only their compact task packet and necessary project instructions.
 8. Prefer reusing an existing worker for a bounded repair over launching a replacement context when ownership and independence still hold.
+9. Escalate a role to a stronger model only on evidence that the configured model failed — a failed repair round, persistent ambiguity, or a gate the model cannot discharge — and record the reason in the ledger notes. Do not route everything through the strongest model preemptively.
+10. Honor the project's `optimize_for` target when routing: `cost` drops each role to the cheapest tier likely to finish without extra turns, `quality` raises gate models a tier, `speed` and `balanced` use the mode defaults.
+11. Reference unchanged artifacts and instructions by path (plus a content hash when the runtime provides one) instead of retransmitting their contents to each worker; the worker reads them itself.
 
 Some runtimes require model-overridden agents to start without inherited history. In that case, a complete task packet is mandatory. If a runtime cannot honor the requested worker model, disclose the fallback before presenting cost totals.
 
@@ -46,14 +49,13 @@ Model price alone is not the optimization target. A cheap worker that needs seve
 
 ## Budget Checkpoints
 
-Before each wave or repair dispatch, record the usage available from the runtime and compare it with `token_budget`, `cost_budget`, and the selected mode's worker-launch limit. At the warning threshold:
+Before each wave or repair dispatch, record the usage available from the runtime and compare it with `token_budget`, `cost_budget`, and the selected mode's worker-launch limit. The configured checkpoints (default 50%, 80%, 100%) trigger in order:
 
-1. Cancel optional prototypes, helpers, and duplicate reviews that have not started.
-2. Merge compatible remaining work under an existing owner.
-3. Use deterministic format, lint, build, and test commands instead of an agent whose only job would be to run them.
-4. Preserve the independent gate required by the selected mode.
+- **50%** — report usage against budget in the next status update; no behavior change required.
+- **80%** — cancel optional prototypes, helpers, and duplicate reviews that have not started; merge compatible remaining work under an existing owner; use deterministic format, lint, build, and test commands instead of an agent whose only job would be to run them. Preserve the independent gate required by the selected mode.
+- **100%** — follow `on_budget_exhausted`: `ask` pauses new dispatches and asks the user to raise the budget, cut scope, or stop; `hard-stop` ends the run with a truthful partial report of what is done, verified, and outstanding.
 
-If usage is not reported, the launch and repair limits remain enforceable proxies. Mark token and cost status `unknown`; do not pretend the budget was verified.
+Per-task and per-phase ceilings come from the work item's `budget` field; a worker that exceeds its own ceiling stops and reports rather than borrowing from siblings. If usage is not reported, the launch and repair limits remain enforceable proxies. Mark token and cost status `unknown`; do not pretend the budget was verified.
 
 ## Required Cost Table
 

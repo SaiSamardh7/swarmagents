@@ -24,7 +24,7 @@ Store these decisions in the blueprint or referenced artifacts. Assign each cont
 - **Lean:** use one to three builders only when the page contains independently testable sections or a bounded frontend/backend boundary. Use separate QA and review owners.
 - **Full:** use four or more builders only for a substantial multi-page or multi-layer application whose work graph proves independent ownership boundaries. The general Full-mode cap still applies.
 
-A visually rich single page is not automatically a Full build. Count deliverables by independent acceptance and write ownership, not by the number of visible sections.
+A visually rich single page is not automatically a Full build. Count deliverables by independent acceptance and write ownership, not by the number of visible sections. A copy or style tweak to an existing page is Direct mode — no page orchestration at all.
 
 ## Decompose by Independent Deliverable
 

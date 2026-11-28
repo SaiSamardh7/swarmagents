@@ -61,7 +61,7 @@ swarmagents focuses on making agent **teamwork** governable: parallel where it's
 
 A single user-facing **Orchestrator** plans the work graph, dispatches bounded tasks to specialist groups in parallel waves, integrates at wave barriers, and owns recovery when something fails — workers build and report; they don't steer.
 
-Before dispatch, it selects a cost-aware execution mode from evidence in the work graph: **Solo** for one coherent deliverable, **Lean** for two to four independent work items, and **Full** for genuinely multi-layer or high-risk builds. Small isolated edits skip orchestration entirely.
+Before dispatch, it selects a cost-aware execution mode from evidence in the work graph: **Direct** for trivial isolated edits (no agents at all), **Solo** for one coherent deliverable — inline or with one fresh builder, always with an independent verifier — **Lean** for two to four independent work items, **Full** for genuinely multi-layer or high-risk builds, and **Persistent** for long-running projects with durable, resumable run state.
 
 ## Why swarmagents
 
@@ -71,6 +71,7 @@ Most multi-agent skills sell the swarm. This one is built around the gates:
 - **No silent mutations.** Workers may prepare a branch, PR text, or deploy plan, but only your explicit approval of the *named action* lets it execute.
 - **Managerial recovery, not retry spam.** Failures trigger an evidence-collecting recovery loop with root-cause classification; the same root cause surviving two repair cycles halts dispatch and forces a changed plan.
 - **Collision-free parallelism.** Versioned contracts, explicit file ownership, and wave scheduling keep up to 20 builders per layer from stepping on each other — with a disclosed serial fallback when delegation is unavailable.
+- **A real cost-control plane.** Per-run and per-task budgets with 50/80/100% checkpoints, a pre-run estimate, evidence-gated model escalation, waste detection, and an honest per-agent cost table at the end.
 
 # Examples
 
@@ -97,7 +98,7 @@ Full operating instructions live in [SKILL.md](skills/swarmagents/SKILL.md); thi
 | Code Reviewer | 0–3 | Reviews correctness, security, architecture, and quality |
 | Deployment | 0–1 | Builds, deploys, monitors, and rolls back when specialist work is warranted |
 
-**Sizing is mode- and evidence-driven.** Solo uses one builder and one independent verifier. Lean uses one to three builders with separate QA and review owners. Full derives its staffing from independently testable, non-overlapping deliverables, bounded by runtime capacity and a hard cap of 20 active workers per builder group. QA and review may grow to three instances each in Full mode, but every gate keeps one owner.
+**Sizing is mode- and evidence-driven.** Direct uses no workers. Solo uses one builder (or inline execution) and one independent verifier. Lean uses one to three builders with separate QA and review owners. Full derives its staffing from independently testable, non-overlapping deliverables, bounded by runtime capacity and a hard cap of 20 active workers per builder group. Persistent adds durable run state so interrupted work resumes without repetition. QA and review may grow to three instances each in Full mode, but every gate keeps one owner.
 
 **Per-role models and cost reporting.** On the skill's first run in a project, the orchestrator asks one batched question: which model each role should run on, offering the platform's actually-available models by tier with a recommended mapping (strongest for the orchestrator and review lead, balanced tiers for builders — pickable per group). Choices persist in `.swarmagents.yml` at the repo root and are reused on every later run. Workers default to fresh contexts with compact task packets instead of inheriting the orchestrator's full history. The final report uses a standard per-agent table for actual model, rates, input/output tokens, no-cache estimate, and cached estimate, with measured and inferred values labeled separately.
 
@@ -117,7 +118,7 @@ Full operating instructions live in [SKILL.md](skills/swarmagents/SKILL.md); thi
 
 Nine structured documents carry every handoff ([references/contracts.md](skills/swarmagents/references/contracts.md)): Blueprint, Work Item, Parallel Wave Manifest, Worker Result, Agent Cost Ledger, Manager Recovery Record, Verification Report, Review Report, and Delivery Approval Package. Model selection, fresh-versus-fork routing, and the final cost table follow [references/model-routing-and-cost.md](skills/swarmagents/references/model-routing-and-cost.md). Web builds additionally follow the wave decomposition in [references/parallel-web-build.md](skills/swarmagents/references/parallel-web-build.md).
 
-The dated [competitive comparison](docs/competitive-comparison-2026-11-27.md) explains how swarmagents differs from gstack, Oh My Claude Code, Superpowers, Ruflo, and AWS CLI Agent Orchestrator, including which tool is stronger for each use case.
+The dated [competitive comparison](docs/competitive-comparison-2026-11-27.md) explains how swarmagents differs from gstack, Oh My Claude Code, Superpowers, Ruflo, and AWS CLI Agent Orchestrator, including which tool is stronger for each use case. The [benchmark plan](docs/benchmark-plan.md) preregisters the task suite, metrics, and targets any performance claim must clear, and the [roadmap](docs/roadmap.md) is honest about which ideas need real software (dashboard, durable runtime, provider adapters) rather than skill text.
 
 ## Gates
 

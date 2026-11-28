@@ -30,8 +30,8 @@ architecture:
   data_changes: [string]
   external_dependencies: [string]
 execution:
-  requested_mode: auto|solo|lean|full
-  selected_mode: solo|lean|full
+  requested_mode: auto|direct|solo|lean|full|persistent
+  selected_mode: solo|lean|full|persistent  # direct skips the blueprint entirely
   rationale: string
   independent_work_items: integer
   product_layers: [frontend|backend|database-integration|external-integration|delivery]
@@ -62,8 +62,16 @@ task_id: FE-001
 title: string
 role: product-requirements|frontend|backend|database-integration|tester-qa|code-reviewer|deployment
 objective: string
+non_goals: [string]  # what this task must not change or decide
 depends_on: [task_id]
+parent_task: task_id|null  # set when this item was split from a larger one
 wave: integer
+model_tier: string|null   # from .swarmagents.yml; null = role default
+budget:
+  tokens: integer|null    # per-task ceiling; null = share of the run budget
+  cost: number|null
+deadline: string|null     # wave barrier or wall-clock bound, when one exists
+retry_limit: integer      # bounded by the mode's repair rounds
 inputs: [artifact path or decision ID]
 ownership:
   read_scope: [path or glob]
@@ -79,7 +87,7 @@ verification: [command or observable check]
 status: ready|active|blocked|review|done
 ```
 
-Before dispatch, verify that concurrently active work items do not have overlapping write scopes or incompatible interface versions. Broad read scopes are allowed; broad write scopes are not.
+Before dispatch, verify that concurrently active work items do not have overlapping write scopes or incompatible interface versions. Broad read scopes are allowed; broad write scopes are not. Reject a vague work item before execution begins: if the objective, ownership, or acceptance criteria are not concrete enough for a fresh worker to act on, repair the item — do not dispatch and hope.
 
 ## Parallel Wave Manifest
 
@@ -87,7 +95,7 @@ Before dispatch, verify that concurrently active work items do not have overlapp
 wave_id: WAVE-01
 objective: string
 max_concurrency: integer
-mode: solo|lean|full
+mode: solo|lean|full|persistent
 budget_checkpoint:
   worker_launches_used: integer
   worker_launches_remaining: integer|null
@@ -140,10 +148,12 @@ tokens:
   input: integer|null
   cached_input: integer|null
   output: integer|null
+  reasoning: integer|null  # when the provider meters it separately
 rates_per_million:
   input: number|null
   cached_input: number|null
   output: number|null
+  reasoning: number|null
   currency: string
   source: user|provider|unknown
   checked_at: YYYY-MM-DD|null
@@ -232,7 +242,7 @@ change_summary: [string]
 checks: [name and result]
 qa_status: pass|conditional
 review_status: approve
-execution_mode: solo|lean|full
+execution_mode: solo|lean|full|persistent
 worker_launches: integer
 token_budget_status: within-budget|warning|exhausted|unknown
 migrations: [string]

@@ -19,13 +19,19 @@ Choose the execution mode before launching any worker. An explicit user choice o
 
 | Mode | Default staffing | Use when | Default limits |
 |---|---|---|---|
+| **Direct** | Orchestrator only; no workers | A trivial or small isolated edit the user asked for; orchestration would be theater | 0 worker launches; normal repository checks still run |
 | **Solo** | Orchestrator, 1 builder, 1 independent verifier | One coherent, independently testable deliverable in one product layer; no material migration, auth, external integration, or irreversible decision | 1 active builder; 2 planned worker launches; 1 repair round |
 | **Lean** | Orchestrator, 1–3 builders, 1 QA owner, 1 review owner | Two to four independent work items, usually across one or two layers, with bounded integration | 3 active builders; 5 planned worker launches; 1 repair round |
 | **Full** | Orchestrator plus the specialist groups required by the work graph | Five or more independent work items, several product layers, or risk that warrants dedicated requirements, integration, QA, review, or deployment specialists | Runtime capacity and work graph; 2 repair rounds |
+| **Persistent** | Full-mode staffing plus the durable run state in "Run State and Resume" | A long-running project expected to span sessions or restarts | Full limits per session; durable run state is mandatory |
+
+Base the choice on evidence recorded in the Blueprint: independent deliverables, product layers touched, risk (migrations, auth, external integrations, irreversible choices), dependency structure, budget, and how much of the work can genuinely run in parallel.
+
+Within Solo, pick one of two execution styles. **Inline:** the Orchestrator implements the fully specified change itself and launches only the independent verifier — the cheapest style that still forbids self-approval. **Fresh-worker:** a builder context implements while the Orchestrator stays managerial — stronger isolation for less-specified work. Record which style was used.
 
 In Solo mode, the same independent verifier may issue two separate artifacts: the Verification Report and Review Report. That keeps both verdicts independent of the author while avoiding a second context for a small change. Lean and Full modes use separate QA and review owners. Product/Requirements and Deployment are conditional roles in every mode: launch them only when their work is substantive. The Orchestrator may prepare a routine delivery package directly; the external-action approval gate never changes.
 
-Before using Solo, confirm that one builder can own the implementation without a broad, ambiguous write scope. Before using Lean, confirm that its builder tasks have genuinely independent deliverables. Select Full when splitting the work creates useful parallelism or independent specialist judgment, not merely because the request sounds ambitious. A one-character edit or similarly trivial change does not justify even Solo mode; handle it directly without orchestration.
+Before using Solo, confirm that one builder can own the implementation without a broad, ambiguous write scope. Before using Lean, confirm that its builder tasks have genuinely independent deliverables. Select Full when splitting the work creates useful parallelism or independent specialist judgment, not merely because the request sounds ambitious. A one-character edit or similarly trivial change is Direct mode: make it without orchestration artifacts. Select Persistent only when the user describes ongoing work that must survive interruption, not merely a large task.
 
 Do not silently exceed a mode's worker-launch or repair-round limits. First reduce or merge tasks, reuse an existing worker where safe, and prefer deterministic commands over another agent. If completion genuinely requires a higher mode or a user-supplied token/cost ceiling would be exceeded, present the evidence and the revised mode or budget before new dispatches.
 
@@ -73,7 +79,8 @@ models:
   code_reviewer: string
   deployment: string
 execution:
-  mode: auto  # auto|solo|lean|full
+  mode: auto  # auto|direct|solo|lean|full|persistent
+  optimize_for: balanced  # cost|speed|quality|balanced|budget
   prefer_fresh_workers: true
   allow_inherited_forks: false
   max_active_workers: auto  # mode default unless the user sets a lower cap
@@ -84,11 +91,12 @@ cost_reporting:
   currency: USD
   token_budget: null
   cost_budget: null
-  warn_at_percent: 80
+  checkpoints_percent: [50, 80, 100]
+  on_budget_exhausted: ask  # ask|hard-stop
   rates: {}  # keyed by actual runtime model id; never guess missing rates
 ```
 
-Reuse the file on every later run in that project; apply documented defaults for newly introduced optional keys instead of re-asking. Re-ask only if the user requests a change or a recorded model is no longer available (then re-ask for the affected roles only). If the runtime cannot set a model per worker, say so, run everything on the session's model, and still record the file so the preference applies when the runtime can honor it.
+Discover the runtime's actual capabilities at intake — subagent support, per-worker model override, usage counters, prompt caching, context limits — rather than assuming them; each documented degradation (serial execution, session-model fallback, `unknown` usage) exists for a capability the runtime may lack. Reuse the file on every later run in that project; apply documented defaults for newly introduced optional keys instead of re-asking. Re-ask only if the user requests a change or a recorded model is no longer available (then re-ask for the affected roles only). If the runtime cannot set a model per worker, say so, run everything on the session's model, and still record the file so the preference applies when the runtime can honor it.
 
 ### Context routing and cost
 
@@ -100,7 +108,9 @@ Use an inherited-context fork only when the task depends on context that cannot 
 
 When `cost_reporting.enabled` is true, maintain one Agent Cost Ledger record per worker and present the table from `references/model-routing-and-cost.md` at completion. Report measured values when the runtime exposes them. Clearly label estimates, unknown usage, cached-token assumptions, and stalled agents; never invent rates or precision.
 
-When the runtime exposes token or cost counters, check the configured budget before each new wave and repair dispatch. At the warning threshold, stop optional agents, merge remaining compatible work, and use deterministic checks where possible. A budget is not permission to skip required evidence: if the remaining gate cannot be completed within the ceiling, report the exact gap and request a revised budget or scope.
+Before the first dispatch, give the user a labeled estimate of the run's expected token and cost range alongside the blueprint, anchored to the selected mode and planned launches — an estimate, never presented as a quote. When the runtime exposes token or cost counters, check the configured budget before each new wave and repair dispatch and act on the checkpoints: at 50%, report status; at 80%, stop optional agents, merge remaining compatible work, and use deterministic checks where possible; at 100%, follow `on_budget_exhausted` — stop and ask to continue, or hard-stop with a truthful partial report. `optimize_for` biases the same decisions: `cost` prefers inline/fewer/cheaper workers, `speed` prefers wider waves within limits, `quality` prefers stronger gate models, `budget` treats the ceiling as hard. A budget is not permission to skip required evidence: if the remaining gate cannot be completed within the ceiling, report the exact gap and request a revised budget or scope.
+
+Watch for waste between checkpoints: the same file read repeatedly across workers, reasoning repeated over unchanged inputs, or retries without a changed hypothesis. Fix the task packet, merge tasks, or reuse an existing worker instead of paying for repetition, and terminate a worker that is consuming budget without producing contract-conformant progress.
 
 ## Operating Invariants
 
@@ -116,6 +126,7 @@ When the runtime exposes token or cost counters, check the configured budget bef
 - Workers return artifacts, tests, and blockers through the structured contracts in `references/contracts.md` — not just text, and with artifact paths instead of large pasted payloads.
 - Every worker launch has a recorded context mode (`fresh`, `fork`, or `inherited-default`) and actual model identifier. Prefer fresh workers with compact task packets to avoid repeatedly billing large parent contexts.
 - Workers report results and evidence; they do not diagnose the overall workflow, rewrite the plan, or decide how a failed loop should recover. Those are Orchestrator responsibilities.
+- Never place secrets, credentials, or tokens in task packets, contracts, run state, memory, or reports. Reference where a value lives; redact the value itself.
 - Deployment is blocked until the Tester/QA and Code Reviewer gates both approve.
 - Workers may prepare delivery artifacts but may not push, create a PR, merge, or deploy. A request to build does not authorize those external actions: the Orchestrator owns the user approval boundary, and the authorized executor performs an external action only after the user approves that named action.
 
@@ -164,6 +175,8 @@ The Orchestrator owns the scheduler and remains active while workers run:
 
 The Orchestrator maintains one source of truth for task state.
 
+When choosing among ready tasks, prioritize the critical path — the dependency chain that bounds total completion time. Merge tiny dependent tasks into one worker context instead of paying a launch for each, and skip parallelism entirely when coordinating two workers would cost more than the time it saves. Treat shared files (registries, barrel files, lockfiles, central configuration) as likely merge conflicts: keep them orchestrator-owned or serialize the tasks that touch them.
+
 ### 6. Build and Integrate
 
 Dispatch work items with complete inputs and narrow ownership. Require each worker to return a worker result contract carrying artifacts, tests, and blockers. The Orchestrator reviews results, integrates compatible changes, resolves interface mismatches, and updates the work graph.
@@ -187,7 +200,7 @@ Record each recovery using the Manager Recovery Record in `references/contracts.
 
 ### 8. Testing Gate (Tester/QA)
 
-The QA owner derives tests from the blueprint's acceptance criteria and verifies the integrated candidate: unit, API, integration, and E2E tests as the repository supports, plus lint/type checks, builds, and relevant security or migration validation. Focused tests run first, then the broader suite. In Solo mode, the independent verifier owns this verdict; in Lean and Full, the Tester/QA coordinator owns it. The owner may enlist builders for test implementation, but verification of a change is never performed solely by its author.
+The QA owner derives tests from the blueprint's acceptance criteria and verifies the integrated candidate through escalating tiers: static checks and focused tests first; then the full suite and build; then browser or API integration testing when the product has those surfaces; with security, accessibility, and performance validation added when the change's risk warrants it. Spend the cheaper tier before the costlier one, and record which tiers ran. Every completion claim carries fresh evidence from these runs — a worker's own say-so is never the gate. In Solo mode, the independent verifier owns this verdict; in Lean and Full, the Tester/QA coordinator owns it. The owner may enlist builders for test implementation, but verification of a change is never performed solely by its author.
 
 On any failure, invoke the Managerial Recovery Loop.
 
@@ -213,9 +226,23 @@ Treat silence, ambiguity, or approval of an earlier phase as no approval. Withou
 
 After an approved deploy, the Orchestrator or designated Deployment agent verifies the running system against the blueprint's success measures (health checks, smoke tests, key journeys) and reports the result. A failed verification triggers the rollback plan and the Managerial Recovery Loop.
 
+## Run State and Resume
+
+In Persistent mode — and in any run the user asks to make resumable — keep durable state under `.swarmagents/runs/<run-id>/`: the blueprint, the work graph with task statuses, wave manifests, worker results, recovery records, and the cost ledger. Update it at every wave barrier and gate verdict, not continuously.
+
+On restart or interruption, rebuild from that state instead of replanning: verify that each `done` task's artifacts still exist, re-dispatch only incomplete or invalidated items, and never repeat completed, verified work. Retries are idempotent — before redoing a task, check whether its artifacts already landed. A worker that has produced no result by the time its wave barrier closes is treated as failed with whatever evidence exists, and its task re-enters the graph through the recovery loop. The same directory doubles as a replayable record of the run.
+
+In other modes this directory is optional; the conversation and task records carry the same artifacts.
+
+## Project Memory
+
+A project may keep an optional, plain `.swarmagents/memory.md` recording what future runs keep rediscovering: architectural decisions, accepted conventions, a repository map, recurring failures with the repair that worked, and the stable test and build commands. Update it at completion when a run produced something durable, and note beside each entry the files it depends on; treat an entry as stale once those files change, and verify before reusing it.
+
+Memory is inspectable, versioned with the repository, and deletable. It never overrides the repository's current instructions or code — when they disagree, the repository wins and the memory entry is corrected or removed.
+
 ## Progress and Completion
 
-Give the user concise updates at phase boundaries and when a decision, blocker, or material scope change arises. Do not stream internal worker chatter.
+Give the user concise updates at phase boundaries and when a decision, blocker, or material scope change arises. Do not stream internal worker chatter. At each wave barrier, the update is a compact status snapshot: execution mode, active and completed workers with their model and work item, files being modified, retries and recoveries so far, and budget remaining (or `unknown`), plus why any model or mode escalation happened.
 
 Completion requires:
 
