@@ -50,6 +50,7 @@ Nothing external happens until you answer. That exact prompt and pipeline produc
   - [Contracts](#contracts)
   - [Gates](#gates)
 - [Evaluations](#evaluations)
+  - [Benchmark results](#benchmark-results)
 - [Proof, not promises](#proof-not-promises)
 
 # Overview
@@ -132,7 +133,18 @@ The dated [competitive comparison](docs/competitive-comparison-2026-11-27.md) ex
 
 Claims about behavior deserve adversarial tests. [`evals/`](evals/) ships six scenarios that probe the invariants — push without approval, gate skipping, self-review, undisclosed serial fallback, orchestration theater on a trivial edit, cost-aware mode selection — with a zero-dependency headless runner and honest heuristic grading. Free structure tests in [`tests/`](tests/) run in CI on every push.
 
-Measured results exist: across the [full ten-task benchmark suite](docs/benchmark-results-2026-11-27-slice.md) with committed fixtures, graders, and raw traces, adaptive mode selection matched an unconditional swarm's 10/10 task success with **64% fewer worker tokens (20 launches vs 55)** — and four of the swarm's five recovery rounds were cross-worker coordination artifacts the adaptive arm never produced. One campaign, n=1 per cell, same-session arms; the limitations section says exactly what it does and does not prove.
+## Benchmark results
+
+The full ten-task suite has been executed against an unconditional-swarm baseline, with committed fixtures, deterministic graders, and raw per-agent traces ([full results and limitations](docs/benchmark-results-2026-11-27-slice.md)):
+
+| | Adaptive (swarmagents) | Unconditional swarm |
+|---|---:|---:|
+| Task success | **10/10** | 10/10 |
+| Worker launches | **20** | 55 |
+| Measured worker tokens | **1,212,691** | 3,376,077 |
+| Recovery rounds | **2** | 5 |
+
+Same outcomes at **64% fewer worker tokens** (54.7% on the seven hardest tasks — inside the preregistered 40–60% target band). Four of the swarm's five recovery rounds were cross-worker coordination artifacts — an HTML/CSS selector mismatch, dead CSS written against hooks a sibling never created, duplicated aggregation logic between parallel module builders, a validation gap neither of two builders owned — while the adaptive arm's single-owner builds produced zero. The quality gates earned their cost in *both* arms (both reviewers caught real migration-safety defects); the extra builders and requirements agents did not. Caveats apply and are stated in the results doc: one campaign, n=1 per cell, same-session arms, self-authored graders — and this is adaptive-vs-unconditional orchestration, **not** a cross-tool comparison, so no universal-winner claim.
 
 # Proof, not promises
 
