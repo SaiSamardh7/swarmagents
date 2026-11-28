@@ -1,6 +1,6 @@
 # Benchmark Plan
 
-A "works better" claim needs evidence. This is the preregistered plan for benchmarking swarmagents against comparable orchestration setups (see the [competitive comparison](competitive-comparison-2026-11-27.md)) on identical tasks. A first 3-task slice testing the cost-reduction target is published in [benchmark-results-2026-11-27-slice.md](benchmark-results-2026-11-27-slice.md); the cross-tool campaign has not run, so the README makes no universal-winner claim.
+A "works better" claim needs evidence. This is the preregistered plan for benchmarking swarmagents against comparable orchestration setups (see the [competitive comparison](competitive-comparison-2026-11-27.md)) on identical tasks. The full ten-task suite has been executed against an unconditional-swarm baseline — results in [benchmark-results-2026-11-27-slice.md](benchmark-results-2026-11-27-slice.md); the cross-tool campaign has not run, so the README makes no universal-winner claim.
 
 ## Task Suite
 

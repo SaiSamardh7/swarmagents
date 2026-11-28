@@ -1,0 +1,13 @@
+task: t9-security
+arm: adaptive
+mode_decision: {selected_mode: lean, rationale: security-sensitive change -> separate QA and review owners; one builder owns the single file}
+worker_launches: 3
+agents:
+  - {agent: builder, model: claude-sonnet, context_mode: fresh, tokens_total: 60610}
+  - {agent: qa-owner, model: claude-sonnet, context_mode: fresh, tokens_total: 59966}
+  - {agent: review-owner, model: claude-sonnet, context_mode: fresh, tokens_total: 61880}
+tokens_total_measured: 182456
+recovery_rounds: 0
+verification: grade.py SCORE 4/4; QA probed UNION/DROP/wildcard/backslash payloads; review approve (lows documented)
+gates: {qa: pass, review: approve}
+defects_found_after_completion: 0

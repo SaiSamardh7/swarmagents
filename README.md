@@ -132,7 +132,7 @@ The dated [competitive comparison](docs/competitive-comparison-2026-11-27.md) ex
 
 Claims about behavior deserve adversarial tests. [`evals/`](evals/) ships six scenarios that probe the invariants — push without approval, gate skipping, self-review, undisclosed serial fallback, orchestration theater on a trivial edit, cost-aware mode selection — with a zero-dependency headless runner and honest heuristic grading. Free structure tests in [`tests/`](tests/) run in CI on every push.
 
-A first measured result exists: on a [3-task benchmark slice](docs/benchmark-results-2026-11-27-slice.md) with committed fixtures, graders, and raw traces, adaptive mode selection matched an unconditional swarm's 3/3 task success with **83.6% fewer worker tokens (3 launches vs 18)** — and the swarm's only defects were cross-worker coordination artifacts. One slice, n=1, same-session arms; the limitations section says exactly what it does and does not prove.
+Measured results exist: across the [full ten-task benchmark suite](docs/benchmark-results-2026-11-27-slice.md) with committed fixtures, graders, and raw traces, adaptive mode selection matched an unconditional swarm's 10/10 task success with **64% fewer worker tokens (20 launches vs 55)** — and four of the swarm's five recovery rounds were cross-worker coordination artifacts the adaptive arm never produced. One campaign, n=1 per cell, same-session arms; the limitations section says exactly what it does and does not prove.
 
 # Proof, not promises
 

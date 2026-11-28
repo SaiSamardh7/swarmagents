@@ -1,0 +1,13 @@
+task: t7-ambiguous
+arm: adaptive
+mode_decision: {selected_mode: solo, execution_style: fresh-worker, rationale: ambiguity resolved by the orchestrator (ASSUMPTIONS.md written before dispatch); the build itself is one coherent deliverable}
+worker_launches: 2
+agents:
+  - {agent: orchestrator (ASSUMPTIONS.md), model: claude-fable-5, context_mode: inherited-default, tokens: not-reported}
+  - {agent: builder, model: claude-sonnet, context_mode: fresh, tokens_total: 61052}
+  - {agent: verifier, model: claude-sonnet, context_mode: fresh, tokens_total: 60956}
+tokens_total_measured: 122008
+recovery_rounds: 0
+verification: grade.py SCORE 5/5; verifier confirmed implementation matches all six recorded assumptions
+gates: {qa: pass, review: approve}
+defects_found_after_completion: 0

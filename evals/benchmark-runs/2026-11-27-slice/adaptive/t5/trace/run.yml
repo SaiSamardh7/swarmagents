@@ -1,0 +1,16 @@
+task: t5-migration
+arm: adaptive
+mode_decision: {selected_mode: lean, rationale: material migration -> separate QA and review owners; one builder}
+worker_launches: 4
+agents:
+  - {agent: builder, model: claude-sonnet, context_mode: fresh, tokens_total: 60362}
+  - {agent: qa-owner, model: claude-sonnet, context_mode: fresh, tokens_total: 59988}
+  - {agent: review-owner, model: claude-sonnet, context_mode: fresh, tokens_total: 61416}
+  - {agent: repair REC-T5-01, model: claude-sonnet, context_mode: fresh, tokens_total: 59864}
+tokens_total_measured: 241630
+recovery_rounds: 1
+recoveries:
+  - {id: REC-T5-01, root_cause: implementation-defect, evidence: review mediums - non-atomic migration, no version downgrade guard, multi-row version table; fixed with BEGIN IMMEDIATE, version read-first guard, single-row table}
+verification: grade.py SCORE 2/2 post-repair; probes migrate-twice and forced-version-9 RuntimeError
+gates: {qa: pass, review: changes-required -> repaired -> accepted}
+defects_found_after_completion: 0

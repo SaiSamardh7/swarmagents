@@ -1,0 +1,10 @@
+run_id: run-01
+blueprint: taskman-plus (see brief.md)
+interrupted_after: BLD-03 verification
+items:
+  - {id: BLD-01, title: storage layer, status: done, artifact: storage.py, sha256: e09efa3d7348ea2ba093e2ff19dd1db9e331bd16f906ea809b7183b76906f6a3}
+  - {id: BLD-02, title: core logic, status: done, artifact: core.py, sha256: 88846f0bb897611cfb3758681a89e8bed2d010ec90bfeac5ceaa29f71d7cfd4b}
+  - {id: BLD-03, title: cli frontend, status: done, artifact: cli.py, sha256: 5276090c9548c9142b1f6014f8a74d3450831756347a092c571bc495bd3725b0}
+  - {id: BLD-04, title: export module (export.py), status: ready, acceptance: tests/test_export.py}
+  - {id: BLD-05, title: stats module (stats.py), status: ready, acceptance: tests/test_stats.py}
+resume_rule: verify done artifacts by hash, dispatch only ready items, never rewrite done work

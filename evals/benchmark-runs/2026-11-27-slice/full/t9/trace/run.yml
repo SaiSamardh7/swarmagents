@@ -1,0 +1,13 @@
+task: t9-security
+arm: full (unconditional swarm)
+staffing: requirements + 1 builder + QA + reviewer
+worker_launches: 4
+agents:
+  - {agent: requirements, model: claude-sonnet, context_mode: fresh, tokens_total: 61847}
+  - {agent: builder, model: claude-sonnet, context_mode: fresh, tokens_total: 64058}
+  - {agent: qa, model: claude-sonnet, context_mode: fresh, tokens_total: 59799}
+  - {agent: reviewer, model: claude-sonnet, context_mode: fresh, tokens_total: 63128}
+tokens_total_measured: 248832
+recovery_rounds: 0
+verification: grade.py 4/4; adversarial payload probes pass; review approve (lows documented)
+defects_found_after_completion: 0

@@ -1,0 +1,19 @@
+task: t6-refactor
+arm: full (unconditional swarm)
+staffing: requirements + 3 single-module builders (validate/stats/render) + orchestrator integration + QA + reviewer + 1 repair
+worker_launches: 7
+agents:
+  - {agent: requirements, model: claude-sonnet, context_mode: fresh, tokens_total: 62121}
+  - {agent: builder-validate, model: claude-sonnet, context_mode: fresh, tokens_total: 62252}
+  - {agent: builder-stats, model: claude-sonnet, context_mode: fresh, tokens_total: 63022}
+  - {agent: builder-render, model: claude-sonnet, context_mode: fresh, tokens_total: 64533}
+  - {agent: qa, model: claude-sonnet, context_mode: fresh, tokens_total: 58436}
+  - {agent: reviewer, model: claude-sonnet, context_mode: fresh, tokens_total: 64690}
+  - {agent: repair REC-FT6-01, model: claude-sonnet, context_mode: fresh, tokens_total: 60088}
+tokens_total_measured: 435142
+recovery_rounds: 1
+recoveries:
+  - {id: REC-FT6-01, root_cause: interface-mismatch (cross-worker duplication), evidence: review HIGH - render._totals re-implemented stats.aggregate because the render builder could not see the sibling's API while building; exactly the duplication the refactor was meant to remove}
+verification: grade.py 9/9 post-repair
+defects_found_after_completion: 0
+notes: the adaptive arm's single-builder refactor produced no duplication; the swarm's parallel module split re-created it and paid a repair to remove it

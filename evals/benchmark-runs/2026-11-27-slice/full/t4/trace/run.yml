@@ -1,0 +1,15 @@
+task: t4-auth
+arm: full (unconditional swarm)
+staffing: requirements + 2 single-file builders (auth.py / notes.py) + QA + reviewer
+worker_launches: 5
+agents:
+  - {agent: requirements, model: claude-sonnet, context_mode: fresh, tokens_total: 61053}
+  - {agent: builder-auth, model: claude-sonnet, context_mode: fresh, tokens_total: 62870}
+  - {agent: builder-notes, model: claude-sonnet, context_mode: fresh, tokens_total: 61822}
+  - {agent: qa, model: claude-sonnet, context_mode: fresh, tokens_total: 60732}
+  - {agent: reviewer, model: claude-sonnet, context_mode: fresh, tokens_total: 61313}
+tokens_total_measured: 307790
+recovery_rounds: 0
+verification: grade.py 2/2; QA probes pass; review approve (low findings - plaintext token keys, no policy)
+defects_found_after_completion: 0
+notes: reviewer variance vs the adaptive arm - the identical plaintext-token-key pattern was rated medium (repair) there and low (accept) here

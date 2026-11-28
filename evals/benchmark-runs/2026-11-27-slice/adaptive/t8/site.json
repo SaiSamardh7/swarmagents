@@ -1,0 +1,20 @@
+{
+  "output": "dist",
+  "defaults": {
+    "tagline": "We make things.",
+    "contact_email": "hello@acme.example"
+  },
+  "pages": [
+    {
+      "name": "index",
+      "template": "index.tmpl",
+      "title": "Acme Home"
+    },
+    {
+      "name": "about",
+      "template": "about.tmpl",
+      "title": "About Acme",
+      "body": "Founded 2020."
+    }
+  ]
+}

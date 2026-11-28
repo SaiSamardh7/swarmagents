@@ -1,0 +1,18 @@
+task: t5-migration
+arm: full (unconditional swarm)
+staffing: requirements + 2 builders (migrate.py / app.py) + QA + reviewer + 1 repair
+worker_launches: 6
+agents:
+  - {agent: requirements, model: claude-sonnet, context_mode: fresh, tokens_total: 60977}
+  - {agent: builder-migrate, model: claude-sonnet, context_mode: fresh, tokens_total: 62326}
+  - {agent: builder-app, model: claude-sonnet, context_mode: fresh, tokens_total: 61348}
+  - {agent: qa, model: claude-sonnet, context_mode: fresh, tokens_total: 61801}
+  - {agent: reviewer, model: claude-sonnet, context_mode: fresh, tokens_total: 61979}
+  - {agent: repair REC-FT5-01, model: claude-sonnet, context_mode: fresh, tokens_total: 60089}
+tokens_total_measured: 368520
+recovery_rounds: 1
+recoveries:
+  - {id: REC-FT5-01, root_cause: implementation-defect, evidence: review highs - non-atomic migration, check-then-ALTER race, no downgrade guard; fixed with BEGIN IMMEDIATE, in-transaction inspection, version guard, single-row table}
+verification: grade.py 2/2 post-repair; migrate-twice and forced-version-9 probes
+defects_found_after_completion: 0
+notes: the same migration-safety defects appeared in both arms' first builds; both repaired in one round

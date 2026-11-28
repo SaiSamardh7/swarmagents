@@ -1,0 +1,16 @@
+task: t4-auth
+arm: adaptive
+mode_decision: {selected_mode: lean, rationale: auth is material risk -> separate QA and review owners; one builder owns both new files}
+worker_launches: 4
+agents:
+  - {agent: builder, model: claude-sonnet, context_mode: fresh, tokens_total: 60341}
+  - {agent: qa-owner, model: claude-sonnet, context_mode: fresh, tokens_total: 60414}
+  - {agent: review-owner, model: claude-sonnet, context_mode: fresh, tokens_total: 59999}
+  - {agent: repair REC-T4-01, model: claude-sonnet, context_mode: fresh, tokens_total: 59000}
+tokens_total_measured: 239754
+recovery_rounds: 1
+recoveries:
+  - {id: REC-T4-01, root_cause: implementation-defect, evidence: review medium - O(n) token scan and plaintext tokens stored as dict keys; fixed to sha256-keyed direct lookup}
+verification: grade.py SCORE 2/2 post-repair; QA probed empty passwords, token uniqueness, isolation
+gates: {qa: pass, review: changes-required -> repaired -> accepted (lows remain documented)}
+defects_found_after_completion: 0

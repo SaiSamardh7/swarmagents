@@ -1,0 +1,18 @@
+task: t7-ambiguous
+arm: full (unconditional swarm)
+staffing: requirements (ASSUMPTIONS.md + requirements.md) + 2 builders (core.py / cli.py) + QA + reviewer + 1 repair
+worker_launches: 6
+agents:
+  - {agent: requirements, model: claude-sonnet, context_mode: fresh, tokens_total: 61642}
+  - {agent: builder-core, model: claude-sonnet, context_mode: fresh, tokens_total: 61402}
+  - {agent: builder-cli, model: claude-sonnet, context_mode: fresh, tokens_total: 61056}
+  - {agent: qa, model: claude-sonnet, context_mode: fresh, tokens_total: 61239}
+  - {agent: reviewer, model: claude-sonnet, context_mode: fresh, tokens_total: 63112}
+  - {agent: repair REC-FT7-01, model: claude-sonnet, context_mode: fresh, tokens_total: 59289}
+tokens_total_measured: 367740
+recovery_rounds: 1
+recoveries:
+  - {id: REC-FT7-01, root_cause: interface-mismatch, evidence: review medium - due validation lived only in the CLI builder's file, so API callers could store values that crash list_overdue; the cross-builder contract left validation ownership undefined}
+verification: grade.py 5/5 post-repair; QA CLI smoke tests pass
+defects_found_after_completion: 0
+notes: the requirements agent handled the ambiguity well (faithful ASSUMPTIONS.md) - the arm's defect came from splitting one feature across two builders, not from the ambiguity

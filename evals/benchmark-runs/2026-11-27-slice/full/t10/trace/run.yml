@@ -1,0 +1,15 @@
+task: t10-resume
+arm: full (unconditional swarm)
+staffing: requirements + 2 builders (export.py / stats.py) + QA + reviewer; run state consulted by the requirements agent
+worker_launches: 5
+agents:
+  - {agent: requirements, model: claude-sonnet, context_mode: fresh, tokens_total: 61775}
+  - {agent: builder-export, model: claude-sonnet, context_mode: fresh, tokens_total: 60912}
+  - {agent: builder-stats, model: claude-sonnet, context_mode: fresh, tokens_total: 60272}
+  - {agent: qa, model: claude-sonnet, context_mode: fresh, tokens_total: 58388}
+  - {agent: reviewer, model: claude-sonnet, context_mode: fresh, tokens_total: 65438}
+tokens_total_measured: 306785
+recovery_rounds: 0
+verification: grade.py 7/7 incl. done-artifact hashes; review approve
+defects_found_after_completion: 0
+notes: resume integrity held in both arms; the swarm spent 2.5x the launches to do it

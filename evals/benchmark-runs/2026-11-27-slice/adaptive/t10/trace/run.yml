@@ -1,0 +1,12 @@
+task: t10-resume
+arm: adaptive
+mode_decision: {selected_mode: persistent-resume, rationale: durable run state consumed; done artifacts verified by hash; the two ready items merged into one dispatch (tiny-task merging)}
+worker_launches: 2
+agents:
+  - {agent: builder (BLD-04+BLD-05 merged), model: claude-sonnet, context_mode: fresh, tokens_total: 60538}
+  - {agent: verifier, model: claude-sonnet, context_mode: fresh, tokens_total: 60994}
+tokens_total_measured: 121532
+recovery_rounds: 0
+verification: grade.py SCORE 7/7 including done-artifact hash integrity (no completed work redone)
+gates: {qa: pass, review: approve}
+defects_found_after_completion: 0

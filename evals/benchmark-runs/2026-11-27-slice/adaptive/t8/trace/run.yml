@@ -1,0 +1,11 @@
+task: t8-failing-deploy
+arm: adaptive
+mode_decision: {selected_mode: direct, rationale: diagnosis-and-repair of a local build; two config defects (trailing comma, missing template variable) fixed by the orchestrator; the grader is the check}
+worker_launches: 0
+agents:
+  - {agent: orchestrator (direct), model: claude-fable-5, context_mode: inherited-default, tokens: not-reported}
+tokens_total_measured: 0
+recovery_rounds: 0
+verification: grade.py SCORE 7/7 (build succeeds twice, both pages render, contact email present)
+gates: direct mode; deterministic grader is the check
+defects_found_after_completion: 0
